@@ -1,0 +1,43 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  width: 75%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 25px;
+  padding-bottom: 25px;
+}
+
+.spotify-auth-btn {
+  background: #1db954 !important;
+  border-color: #1db954 !important;
+}
+
+.spotify-auth-btn:hover {
+  background: #45bb6e !important;
+  border-color: #45bb6e !important;
+}
+
+.vert-space {
+  width: 100%;
+}
+
+.markdown {
+  font-family: monospace;
+  margin-bottom: 8px !important;
+}
