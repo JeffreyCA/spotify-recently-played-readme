@@ -94,7 +94,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
             }
         }
 
-        res.setHeader('Cache-Control', 's-maxage=90, stale-while-revalidate');
+        res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
         res.setHeader('Content-Type', 'image/svg+xml');
         res.statusCode = 200;
         res.send(generateSvg(recentlyPlayed, username, width));
