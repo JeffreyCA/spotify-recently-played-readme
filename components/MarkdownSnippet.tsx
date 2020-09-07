@@ -34,7 +34,7 @@ export default function MarkdownSnippet(props: Props): JSX.Element | null {
             <Text>
                 For custom count (
                 <b>
-                    {Constants.minCount} &#8804; &#123;count&#125; &#8804; ${Constants.maxCount}
+                    {Constants.minCount} &#8804; &#123;count&#125; &#8804; {Constants.maxCount}
                 </b>
                 ):
             </Text>
