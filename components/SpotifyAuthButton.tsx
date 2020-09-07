@@ -30,7 +30,7 @@ export default function SpotifyAuthButton(props: Props): JSX.Element {
         window.location.href = getAuthorizeUri(scopes);
     };
 
-    const label = props.label ?? 'Authenticate';
+    const label = props.label ?? 'Authorize';
     return (
         <Button
             className="spotify-auth-btn"

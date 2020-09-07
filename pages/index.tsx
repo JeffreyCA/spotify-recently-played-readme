@@ -44,13 +44,13 @@ export default function Home(): JSX.Element {
 
                 {!currentUser ? (
                     <Space className="vert-space" direction="vertical" size="middle">
-                        <Text>Get started by authenticating below.</Text>
+                        <Text>Get started by authorizing the app below.</Text>
                         <SpotifyAuthButton clientId={ClientId} redirectUri={RedirectUri} />
                     </Space>
                 ) : (
                     <Space className="vert-space" direction="vertical" size="middle">
                         <MarkdownSnippet username={currentUser} />
-                        <SpotifyAuthButton clientId={ClientId} redirectUri={RedirectUri} label="Re-authenticate" />
+                        <SpotifyAuthButton clientId={ClientId} redirectUri={RedirectUri} label="Re-authorize" />
                         <Button type="link" danger onClick={handleClearCreds}>
                             Clear local credentials
                         </Button>

@@ -48,7 +48,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
         const tokens = await getTokensFromFirebase(user);
         if (!tokens.accessToken || !tokens.refreshToken) {
             // Tokens are missing, so redirect to home with error message
-            res.redirect(`${Constants.BaseUrl}?error=Please authenticate below.`);
+            res.redirect(`${Constants.BaseUrl}?error=Please authorize below.`);
             return;
         }
 
@@ -63,8 +63,8 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
                 // Write new access token to Firebase
                 await writeTokensToFirebase(user, tokens.accessToken, tokens.refreshToken);
             } catch (e) {
-                // Otherwise redirect user to re-authenticate
-                res.redirect(`${Constants.BaseUrl}?error=Please re-authenticate below.`);
+                // Otherwise redirect user to re-authorize
+                res.redirect(`${Constants.BaseUrl}?error=Please re-authorize below.`);
                 return;
             }
         }
