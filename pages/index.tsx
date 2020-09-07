@@ -1,4 +1,4 @@
-import { Alert, Breadcrumb, Space, Typography } from 'antd';
+import { Alert, Breadcrumb, Button, Space, Typography } from 'antd';
 import Cookie from 'js-cookie';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -21,6 +21,11 @@ export default function Home(): JSX.Element {
             setCurrentUser(user);
         }
     });
+
+    const handleClearCreds = () => {
+        Cookie.remove('spotifyuser');
+        window.location.reload();
+    };
 
     return (
         <div className="container">
@@ -46,6 +51,9 @@ export default function Home(): JSX.Element {
                     <Space className="vert-space" direction="vertical" size="middle">
                         <MarkdownSnippet username={currentUser} />
                         <SpotifyAuthButton clientId={ClientId} redirectUri={RedirectUri} label="Re-authenticate" />
+                        <Button type="link" danger onClick={handleClearCreds}>
+                            Clear local credentials
+                        </Button>
                     </Space>
                 )}
             </div>
