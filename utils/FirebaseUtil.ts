@@ -57,3 +57,8 @@ export async function writeTokensToFirebase(user: string, accessToken: string, r
     await ref.child('access_token').set(accessToken);
     await ref.child('refresh_token').set(refreshToken);
 }
+
+export async function warmup(): Promise<void> {
+    const ref = admin.database().ref();
+    return (await ref.once('value')).val();
+}
