@@ -15,7 +15,7 @@
     "firebase-admin": "^9.4.2",
     "js-cookie": "^2.2.1",
     "luxon": "^1.25.0",
-    "next": "9.5.1",
+    "next": "9.5.4",
     "next-images": "^1.6.2",
     "qs": "^6.9.4",
     "react": "16.13.1",
