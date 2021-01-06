@@ -10,7 +10,7 @@
   "dependencies": {
     "@ant-design/icons": "^4.3.0",
     "antd": "^4.9.3",
-    "axios": "^0.20.0",
+    "axios": "^0.21.1",
     "cookies": "^0.8.0",
     "firebase-admin": "^9.4.2",
     "js-cookie": "^2.2.1",
