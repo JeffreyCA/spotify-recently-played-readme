@@ -60,5 +60,5 @@ export async function writeTokensToFirebase(user: string, accessToken: string, r
 
 export async function warmup(): Promise<void> {
     const ref = admin.database().ref();
-    return (await ref.once('value')).val();
+    return (await ref.limitToFirst(1).once('value')).val();
 }
