@@ -106,7 +106,7 @@ Sometimes you may encounter an issue where the widget fails to load on GitHub, w
 
 As a workaround, there's an endpoint at `/api/warmup?key=<WARMUP_KEY>` which accepts a GET request with a single query parameter `key`. If it matches the environment variable `WARMUP_KEY`, then it will go ahead and issue a simple database read request to Firebase to keep it *warm*. For your own Vercel instance, you can setup a simple cron job to ping the endpoint every few minutes or so to prevent cold starts. I already do this with the hosted Vercel instance.
 
-This is a bit of a hacky workaround, but if you have any better solutions feel free to open an issue or create a PR!
+This is a bit of a hacky workaround and may not 100% eliminate the issue. If you have any better solutions or have general optimizations feel free to create a PR!
 
 ## License
 [MIT](LICENSE)
