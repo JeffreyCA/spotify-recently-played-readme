@@ -20,7 +20,8 @@
     "qs": "^6.9.4",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "styled-jsx": "^3.3.2"
+    "styled-jsx": "^3.3.2",
+    "webpack": "^4.44.2"
   },
   "devDependencies": {
     "@types/cookies": "^0.7.5",

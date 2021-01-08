@@ -10,7 +10,7 @@ Click the button below to connect your Spotify account with the Vercel app. This
 >
 > You can revoke the app at https://www.spotify.com/account/apps.
 
-[![Authorize app](assets/auth.png)](https://spotify-recently-played-readme.vercel.app/)
+<a href="https://spotify-recently-played-readme.vercel.app/"><img src="assets/auth.png" alt="Authorize button" width="160"/></a>
 
 After granting permission, just add the following into your README and set the `user` query parameter to your Spotify username.
 
@@ -70,6 +70,7 @@ Deploy your own Vercel instance using the link above. Next, set the following en
 | `FIREBASE_PRIVATE_KEY_B64` | Base64-encoded string of Firebase private key |
 | `FIREBASE_CLIENT_EMAIL` | Firebase client email |
 | `FIREBASE_DATABASE_URL` | Firebase database URL |
+| `WARMUP_KEY` | Secret to trigger Firebase database warmup (see [Common issues](#common-issues) for more info)
 
 Finally, edit `utils/Constants.ts` and set the `ClientId`, `BaseUrl`, `RedirectUri` values.
 
@@ -98,6 +99,14 @@ Finally, edit `utils/Constants.ts` and set the `ClientId`, `BaseUrl`, `RedirectU
     ```
 
 The app will be running at [http://localhost:3000](http://localhost:3000).
+
+## Common issues
+### Widget fails to load on GitHub
+Sometimes you may encounter an issue where the widget fails to load on GitHub, with a 502 response from `camo.githubusercontent.com`. This is because GitHub proxies images and will timeout requests if they take too long. Long request times are usually a result of Firebase database **cold starts**, which can take up to several seconds ([known issue](https://issuetracker.google.com/issues/158014637)).
+
+As a workaround, there's an endpoint at `/api/warmup?key=<WARMUP_KEY>` which accepts a GET request with a single query parameter `key`. If it matches the environment variable `WARMUP_KEY`, then it will go ahead and issue a simple database read request to Firebase to keep it *warm*. You can setup a simple cron job to ping the endpoint every few minutes or so to prevent cold starts. I already do this with my Vercel instance.
+
+This is a bit of a hacky workaround, but if you have any better solutions feel free to open an issue or create a PR!
 
 ## License
 [MIT](LICENSE)
