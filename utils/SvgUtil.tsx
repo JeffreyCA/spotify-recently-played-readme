@@ -20,11 +20,13 @@ export function generateSvg(recentlyPlayedRes: RecentlyPlayedResponse, username:
 
     return `
     <svg
-        width="${width}"
-        height="${height}"
+        width="auto"
+        height="auto"
         viewBox="0 0 ${width} ${height}"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="xMinYMin meet"
+        style="max-width: ${width}px;"
     >
     ${svgStyles}
     ${svgBody}
