@@ -46,7 +46,7 @@ export default function SvgWidget(props: SvgWidgetProps): JSX.Element {
                     y="0"
                     rx="10"
                     height="100%"
-                    stroke="#b3b3b3"
+                    stroke="#212121"
                     width={width}
                     fill="#212121"
                     strokeOpacity="1"
