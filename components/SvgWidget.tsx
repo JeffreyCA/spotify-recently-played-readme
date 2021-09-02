@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
-import { RecentlyPlayedResponse } from '../models/RecentlyPlayedResponse';
+import { PlayHistory } from '../models/PlayHistory';
 import AntStyles from '../styles/antd';
 import SvgStyles from '../styles/svg';
 import TrackList from './TrackList/TrackList';
@@ -17,7 +17,7 @@ interface SvgWidgetProps {
     /**
      * Recently played response from Spotify API.
      */
-    recentlyPlayedResponse: RecentlyPlayedResponse;
+    recentlyPlayedItems: PlayHistory[];
     /**
      * Username.
      */
@@ -28,7 +28,7 @@ interface SvgWidgetProps {
  * The main SVG widget.
  */
 export default function SvgWidget(props: SvgWidgetProps): JSX.Element {
-    const playHistoryList = props.recentlyPlayedResponse.items;
+    const playHistoryList = props.recentlyPlayedItems;
     const { width, height, username } = props;
 
     return (

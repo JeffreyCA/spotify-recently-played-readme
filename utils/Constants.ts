@@ -6,6 +6,8 @@ export const BaseUrl = 'https://spotify-recently-played-readme.vercel.app';
 export const RedirectUri = `https://spotify-recently-played-readme.vercel.app/api/callback`;
 
 export const defaultCount = 5;
+export const defaultSearchCount = 20;
+export const defaultUniqueTrack = false;
 export const minCount = 1;
 export const maxCount = 10;
 

@@ -1,9 +1,10 @@
 import axios from 'axios';
 import qs from 'qs';
+import { PlayHistory } from '../models/PlayHistory';
 import { RecentlyPlayedResponse } from '../models/RecentlyPlayedResponse';
 import { SpotifyAuthResponse } from '../models/SpotifyAuthResponse';
 import { SpotifyRefreshResponse } from '../models/SpotifyRefreshResponse';
-import { ClientId, RedirectUri } from './Constants';
+import { ClientId, defaultSearchCount, RedirectUri } from './Constants';
 
 export function getAuthorizeUri(scopes: string[]): string {
     const spaceSepScopes = scopes.join('%20');
@@ -51,17 +52,25 @@ export async function getUsername(accessToken: string): Promise<string> {
     return result.data.id;
 }
 
-export async function getRecentlyPlayed(count: number, accessToken: string): Promise<RecentlyPlayedResponse> {
+export async function getRecentlyPlayed(uniqueTrack: boolean, accessToken: string): Promise<PlayHistory[]> {
     const result = await axios.get<RecentlyPlayedResponse>('https://api.spotify.com/v1/me/player/recently-played', {
         params: {
-            limit: count,
+            limit: defaultSearchCount,
         },
         headers: {
             Authorization: `Bearer ${accessToken}`,
         },
     });
 
-    return result.data;
+    let items: PlayHistory[] = result.data.items;
+
+    if (uniqueTrack) {
+        items = items.filter((v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i);
+        console.log('Unique tracks');
+        console.log(items);
+    }
+
+    return items;
 }
 
 export async function isValidToken(accessToken: string): Promise<boolean> {
