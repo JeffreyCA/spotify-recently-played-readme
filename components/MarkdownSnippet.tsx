@@ -25,6 +25,7 @@ export default function MarkdownSnippet(props: Props): JSX.Element | null {
     const markdownCode = `![Alt text](${svgSrc})`;
     const customCount = `![Alt text](${svgSrc}&count={count})`;
     const customWidth = `![Alt text](${svgSrc}&width={width})`;
+    const uniqueTracks = `![Alt text](${svgSrc}&unique={true|1|on|yes})`;
 
     return (
         <Space className="vert-space" direction="vertical" size="small">
@@ -47,6 +48,8 @@ export default function MarkdownSnippet(props: Props): JSX.Element | null {
                 ):
             </Text>
             <TextArea className="markdown" autoSize readOnly value={customWidth} />
+            <Text>For unique tracks :</Text>
+            <TextArea className="markdown" autoSize readOnly value={uniqueTracks} />
             <object type="image/svg+xml" data={svgSrc}></object>
         </Space>
     );

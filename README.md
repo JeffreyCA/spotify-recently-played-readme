@@ -57,6 +57,18 @@ Example:
 
 ![Spotify recently played](https://spotify-recently-played-readme.vercel.app/api?user=jeffreyca16&width=600)
 
+### Unique tracks
+To show only uniqe tracks of the recently played list, pass the `unique` query parameter and set it to `true`, `1`, `on`, or `yes`.
+
+> Default: `false`  
+
+Example:
+```md
+![Spotify recently played](https://spotify-recently-played-readme.vercel.app/api?user=jeffreyca16&unique=true)
+```
+
+![Spotify recently played](https://spotify-recently-played-readme.vercel.app/api?user=jeffreyca16&unique=true)
+
 ## Deploying own Vercel instance
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https%3A%2F%2Fgithub.com%2FJeffreyCA%2Fspotify-recently-played-readme&env=CLIENT_ID,CLIENT_SECRET,FIREBASE_PROJECT_ID,FIREBASE_PRIVATE_KEY_B64,FIREBASE_CLIENT_EMAIL)
 
