@@ -52,23 +52,17 @@ export async function getUsername(accessToken: string): Promise<string> {
     return result.data.id;
 }
 
-export async function getRecentlyPlayed(uniqueTrack: boolean, accessToken: string): Promise<PlayHistory[]> {
+export async function getRecentlyPlayed(limit: number, accessToken: string): Promise<PlayHistory[]> {
     const result = await axios.get<RecentlyPlayedResponse>('https://api.spotify.com/v1/me/player/recently-played', {
         params: {
-            limit: defaultSearchCount,
+            limit: limit,
         },
         headers: {
             Authorization: `Bearer ${accessToken}`,
         },
     });
-
-    let items: PlayHistory[] = result.data.items;
-
-    if (uniqueTrack) {
-        items = items.filter((v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i);
-    }
-
-    return items;
+    
+    return result.data.items;
 }
 
 export async function isValidToken(accessToken: string): Promise<boolean> {

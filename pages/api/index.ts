@@ -88,7 +88,15 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
 
         // Get recently played tracks
         const username = await getUsername(tokens.accessToken);
-        const recentlyPlayedItems = await getRecentlyPlayed(uniqueTrack, tokens.accessToken);
+        const limit = uniqueTrack ? Constants.defaultUniqueTrackSearchLimit : count
+        let recentlyPlayedItems = await getRecentlyPlayed(limit, tokens.accessToken);
+
+        if (uniqueTrack) {
+            // Remove duplicate tracks...
+            recentlyPlayedItems = recentlyPlayedItems.filter((v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i);
+            // ... then only return the number of items that are requested.
+            recentlyPlayedItems.slice(0, count);
+        }
 
         // Set base64-encoded cover art images by routing through /api/proxy endpoint
         // This is needed because GitHub's Content Security Policy prohibits external images (inline allowed)
@@ -114,7 +122,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
         res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
         res.setHeader('Content-Type', 'image/svg+xml');
         res.statusCode = 200;
-        res.send(generateSvg(recentlyPlayedItems.slice(0, count), username, width));
+        res.send(generateSvg(recentlyPlayedItems, username, width));
     } catch (e) {
         const data = e?.response?.data;
         res.statusCode = 400;
