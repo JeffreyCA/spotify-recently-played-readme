@@ -10,11 +10,11 @@ interface Props {
     /**
      * Spotify app client ID.
      */
-    clientId: string;
+    clientId: string | undefined;
     /**
      * Redirect URI.
      */
-    redirectUri: string;
+    redirectUri: string | undefined;
     /**
      * Alternative label for button.
      */
