@@ -66,8 +66,6 @@ export async function getRecentlyPlayed(uniqueTrack: boolean, accessToken: strin
 
     if (uniqueTrack) {
         items = items.filter((v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i);
-        console.log('Unique tracks');
-        console.log(items);
     }
 
     return items;
