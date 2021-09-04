@@ -4,7 +4,7 @@ import { PlayHistory } from '../models/PlayHistory';
 import { RecentlyPlayedResponse } from '../models/RecentlyPlayedResponse';
 import { SpotifyAuthResponse } from '../models/SpotifyAuthResponse';
 import { SpotifyRefreshResponse } from '../models/SpotifyRefreshResponse';
-import { ClientId, defaultSearchCount, RedirectUri } from './Constants';
+import { ClientId, RedirectUri } from './Constants';
 
 export function getAuthorizeUri(scopes: string[]): string {
     const spaceSepScopes = scopes.join('%20');
