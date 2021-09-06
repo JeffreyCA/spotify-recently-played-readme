@@ -58,7 +58,7 @@ Example:
 ![Spotify recently played](https://spotify-recently-played-readme.vercel.app/api?user=jeffreyca16&width=600)
 
 ### Unique tracks
-To show only uniqe tracks of the recently played list, pass the `unique` query parameter and set it to `true`, `1`, `on`, or `yes`.
+To show only unique tracks of the recently played list, pass the `unique` query parameter and set it to `true`, `1`, `on`, or `yes`.
 
 > Default: `false`  
 
