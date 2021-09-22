@@ -95,7 +95,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
             // Remove duplicate tracks...
             recentlyPlayedItems = recentlyPlayedItems.filter((v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i);
             // ... then only return the number of items that are requested.
-            recentlyPlayedItems.slice(0, count);
+            recentlyPlayedItems = recentlyPlayedItems.slice(0, count);
         }
 
         // Set base64-encoded cover art images by routing through /api/proxy endpoint
