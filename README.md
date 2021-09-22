@@ -76,6 +76,8 @@ Deploy your own Vercel instance using the link above. Next, set the following en
 
 | Name | Description |
 |---|---|
+| `REDIRECT_URI` | Callback URI from Spotify |
+| `BASE_URL` | Base URL of the project |
 | `CLIENT_ID` | Spotify app client ID |
 | `CLIENT_SECRET` | Spotify app client secret key |
 | `FIREBASE_PROJECT_ID` | Firebase project ID |
@@ -97,6 +99,8 @@ Finally, edit `utils/Constants.ts` and set the `ClientId`, `BaseUrl`, `RedirectU
     ```
 3. Create `.env` file containing required environment variables:
     ```sh
+    REDIRECT_URI=<Callback URI from Spotify>
+    BASE_URL=<Base URL of the project>
     CLIENT_ID=<Spotify app client ID>
     CLIENT_SECRET=<Spotify app client secret key>
     FIREBASE_PROJECT_ID=<Firebase project ID>
