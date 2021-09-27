@@ -12,7 +12,7 @@ export function getAuthorizeUri(scopes: string[]): string {
 }
 
 export function getEncodedClientIdAndSecret(): string {
-    const clientId = process.env.CLIENT_ID;
+    const clientId = ClientId;
     const clientSecret = process.env.CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
