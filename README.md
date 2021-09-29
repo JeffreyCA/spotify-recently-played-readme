@@ -70,15 +70,15 @@ Example:
 ![Spotify recently played](https://spotify-recently-played-readme.vercel.app/api?user=jeffreyca16&unique=true)
 
 ## Deploying own Vercel instance
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https%3A%2F%2Fgithub.com%2FJeffreyCA%2Fspotify-recently-played-readme&env=CLIENT_ID,CLIENT_SECRET,FIREBASE_PROJECT_ID,FIREBASE_PRIVATE_KEY_B64,FIREBASE_CLIENT_EMAIL)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https%3A%2F%2Fgithub.com%2FJeffreyCA%2Fspotify-recently-played-readme&env=NEXT_PUBLIC_CLIENT_ID,CLIENT_SECRET,FIREBASE_PROJECT_ID,FIREBASE_PRIVATE_KEY_B64,FIREBASE_CLIENT_EMAIL)
 
 Deploy your own Vercel instance using the link above. Next, set the following environment variables:
 
 | Name | Description |
 |---|---|
-| `REDIRECT_URI` | Callback URI from Spotify |
-| `BASE_URL` | Base URL of the project |
-| `CLIENT_ID` | Spotify app client ID |
+| `NEXT_PUBLIC_REDIRECT_URI` | Callback URI from Spotify |
+| `NEXT_PUBLIC_BASE_URL` | Base URL of the project |
+| `NEXT_PUBLIC_CLIENT_ID` | Spotify app client ID |
 | `CLIENT_SECRET` | Spotify app client secret key |
 | `FIREBASE_PROJECT_ID` | Firebase project ID |
 | `FIREBASE_PRIVATE_KEY_B64` | Base64-encoded string of Firebase private key |
@@ -99,9 +99,9 @@ Finally, edit `utils/Constants.ts` and set the `ClientId`, `BaseUrl`, `RedirectU
     ```
 3. Create `.env` file containing required environment variables:
     ```sh
-    REDIRECT_URI=<Callback URI from Spotify>
-    BASE_URL=<Base URL of the project>
-    CLIENT_ID=<Spotify app client ID>
+    NEXT_PUBLIC_REDIRECT_URI=<Callback URI from Spotify>
+    NEXT_PUBLIC_BASE_URL=<Base URL of the project>
+    NEXT_PUBLIC_CLIENT_ID=<Spotify app client ID>
     CLIENT_SECRET=<Spotify app client secret key>
     FIREBASE_PROJECT_ID=<Firebase project ID>
     FIREBASE_PRIVATE_KEY_B64=<Base64-encoded string of Firebase private key>
