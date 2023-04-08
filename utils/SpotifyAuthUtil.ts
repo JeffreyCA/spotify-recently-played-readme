@@ -61,7 +61,7 @@ export async function getRecentlyPlayed(limit: number, accessToken: string): Pro
             Authorization: `Bearer ${accessToken}`,
         },
     });
-    
+
     return result.data.items;
 }
 

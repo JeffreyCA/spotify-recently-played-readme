@@ -88,12 +88,14 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
 
         // Get recently played tracks
         const username = await getUsername(tokens.accessToken);
-        const limit = uniqueTrack ? Constants.defaultUniqueTrackSearchLimit : count
+        const limit = uniqueTrack ? Constants.defaultUniqueTrackSearchLimit : count;
         let recentlyPlayedItems = await getRecentlyPlayed(limit, tokens.accessToken);
 
         if (uniqueTrack) {
             // Remove duplicate tracks...
-            recentlyPlayedItems = recentlyPlayedItems.filter((v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i);
+            recentlyPlayedItems = recentlyPlayedItems.filter(
+                (v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i
+            );
             // ... then only return the number of items that are requested.
             recentlyPlayedItems = recentlyPlayedItems.slice(0, count);
         }
@@ -115,7 +117,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
                 });
                 track.inlineimage = data;
             } catch {
-                track.inlineimage = PlaceholderImg;
+                track.inlineimage = PlaceholderImg.src;
             }
         }
 
@@ -123,7 +125,7 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
         res.setHeader('Content-Type', 'image/svg+xml');
         res.statusCode = 200;
         res.send(generateSvg(recentlyPlayedItems, username, width));
-    } catch (e) {
+    } catch (e: any) {
         const data = e?.response?.data;
         res.statusCode = 400;
         if (data) {

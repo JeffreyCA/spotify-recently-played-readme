@@ -1,3 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-const withImages = require('next-images');
-module.exports = withImages();
+module.exports = {
+    images: {
+        formats: ['image/webp'],
+    },
+};

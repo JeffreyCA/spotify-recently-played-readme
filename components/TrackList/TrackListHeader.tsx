@@ -1,4 +1,4 @@
-import { Col, Image, Row, Space, Typography } from 'antd';
+import { Image, Space, Typography } from 'antd';
 import SpotifyIcon from '../../public/spotify.svg';
 
 const { Text } = Typography;

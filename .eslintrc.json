@@ -22,14 +22,22 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "react/react-in-jsx-scope": "off"
+        "react/react-in-jsx-scope": "off",
+        "react/no-unknown-property": [
+            2,
+            {
+                "ignore": [
+                    "jsx",
+                    "global"
+                ]
+            }
+        ]
     },
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:react/recommended",
-        "prettier/@typescript-eslint",
         "plugin:prettier/recommended"
     ]
 }
