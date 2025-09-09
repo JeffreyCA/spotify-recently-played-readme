@@ -47,4 +47,19 @@ a.a-spotify:hover {
 .timestamp {
     font-size: 0.7rem;
     margin-left: 5px;
-}`;
+}
+
+/* === Tambahan Tema Radical === */
+.radical-bg {
+    background-color: #141321;
+}
+.radical-title {
+    color: #ff0055;
+}
+.radical-text {
+    color: #f8f8f2;
+}
+.radical-subtle {
+    color: #999999;
+}
+`;
