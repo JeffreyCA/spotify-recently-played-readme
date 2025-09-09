@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import axios from 'axios';
 import { NextApiRequest, NextApiResponse } from 'next';
 import PlaceholderImg from '../../public/placeholder.webp';
@@ -5,6 +6,20 @@ import * as Constants from '../../utils/Constants';
 import { getTokensFromFirebase, writeTokensToFirebase } from '../../utils/FirebaseUtil';
 import { getRecentlyPlayed, getUsername, isValidToken, refreshAccessToken } from '../../utils/SpotifyAuthUtil';
 import { generateSvg } from '../../utils/SvgUtil';
+
+// ✨ Tambahan: definisi warna tema
+const themeColors = {
+    radical: {
+        background: "#141321",
+        title: "#ff0055",
+        artist: "#f8f8f2",
+    },
+    default: {
+        background: "#191414",
+        title: "#1DB954",
+        artist: "#FFFFFF",
+    },
+};
 
 /**
  * Main endpoint to return SVG.
@@ -16,6 +31,11 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
         res.json({ error: `Invalid 'user' parameter` });
         return;
     }
+
+    // ✨ Parse 'theme' query parameter
+    const themeQuery: string | string[] | undefined = req.query['theme'];
+    const theme = typeof themeQuery === 'string' ? themeQuery : 'default';
+    const colors = themeColors[theme] || themeColors.default;
 
     // Parse 'width' query parameter
     const widthQuery: string | string[] | undefined = req.query['width'];
@@ -88,12 +108,14 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
 
         // Get recently played tracks
         const username = await getUsername(tokens.accessToken);
-        const limit = uniqueTrack ? Constants.defaultUniqueTrackSearchLimit : count
+        const limit = uniqueTrack ? Constants.defaultUniqueTrackSearchLimit : count;
         let recentlyPlayedItems = await getRecentlyPlayed(limit, tokens.accessToken);
 
         if (uniqueTrack) {
             // Remove duplicate tracks...
-            recentlyPlayedItems = recentlyPlayedItems.filter((v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i);
+            recentlyPlayedItems = recentlyPlayedItems.filter(
+                (v, i, a) => a.findIndex((t) => t.track.id === v.track.id) === i
+            );
             // ... then only return the number of items that are requested.
             recentlyPlayedItems = recentlyPlayedItems.slice(0, count);
         }
@@ -122,7 +144,9 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
         res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
         res.setHeader('Content-Type', 'image/svg+xml');
         res.statusCode = 200;
-        res.send(generateSvg(recentlyPlayedItems, username, width));
+
+        // ✨ Pass colors ke generateSvg
+        res.send(generateSvg(recentlyPlayedItems, username, width, colors));
     } catch (e) {
         const data = e?.response?.data;
         res.statusCode = 400;
