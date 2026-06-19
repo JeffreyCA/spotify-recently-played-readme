@@ -4,7 +4,7 @@ import PlaceholderImg from '../../public/placeholder.webp';
 import * as Constants from '../../utils/Constants';
 import { getTokensFromFirebase, writeTokensToFirebase } from '../../utils/FirebaseUtil';
 import { getRecentlyPlayed, getUsername, isValidToken, refreshAccessToken } from '../../utils/SpotifyAuthUtil';
-import { generateSvg } from '../../utils/SvgUtil';
+import { generateErrorSvg, generateSvg } from '../../utils/SvgUtil';
 
 /**
  * Main endpoint to return SVG.
@@ -63,9 +63,24 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
     try {
         // Retrieve access tokens from Firebase
         const tokens = await getTokensFromFirebase(user);
+
+        function sendReauthorizeSvg(): void {
+            res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.statusCode = 200;
+            res.send(
+                generateErrorSvg(
+                    'Spotify authorization needed',
+                    'This widget needs you to (re-)authorize. Spotify refresh tokens expire after 6 months, so sign in again to keep it working:',
+                    Constants.BaseUrl ?? '',
+                    width
+                )
+            );
+        }
+
         if (!tokens.accessToken || !tokens.refreshToken) {
-            // Tokens are missing, so redirect to home with error message
-            res.redirect(`${Constants.BaseUrl}?error=Please authorize below.`);
+            // Tokens are missing, so prompt the user to authorize.
+            sendReauthorizeSvg();
             return;
         }
 
@@ -80,8 +95,9 @@ export default async (req: NextApiRequest, res: NextApiResponse): Promise<void> 
                 // Write new access token to Firebase
                 await writeTokensToFirebase(user, tokens.accessToken, tokens.refreshToken);
             } catch (e) {
-                // Otherwise redirect user to re-authorize
-                res.redirect(`${Constants.BaseUrl}?error=Please re-authorize below.`);
+                // Refresh failed (e.g. expired/invalid_grant refresh token), so prompt
+                // the user to re-authorize. Do not retry the refresh.
+                sendReauthorizeSvg();
                 return;
             }
         }
