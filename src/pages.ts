@@ -107,8 +107,9 @@ export function disconnectedPage(userId: string): Response {
   return page(
     'Disconnected',
     `<h1>Disconnected</h1>` +
-      `<p>The tokens stored for <code>${escapeXml(userId)}</code> have been deleted, and any card ` +
-      `using that username will stop working.</p>` +
+      `<p>The tokens stored for <code>${escapeXml(userId)}</code> have been deleted. Cards using ` +
+      `that username will stop working, though already-rendered ones can linger for up to an hour ` +
+      `while caches expire.</p>` +
       // Worth being explicit about: deleting our copy is not the same as
       // revoking the grant, and someone disconnecting probably wants both.
       `<p><strong>This does not revoke access on Spotify's side.</strong> To remove this app from ` +

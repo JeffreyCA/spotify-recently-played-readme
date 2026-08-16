@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decryptToken, encryptToken, randomNonce, signState, verifyState } from '../src/crypto';
+import { isValidUserId } from '../src/firebase';
 
 /**
  * The two crypto properties worth pinning, and nothing else.
@@ -54,5 +55,19 @@ describe('OAuth state', () => {
     // can produce one.
     const future = await signState({ nonce, iat: now + 3_600_000, intent: 'connect' }, SECRET);
     expect(await verifyState(future, SECRET, 600_000, now)).toBeNull();
+  });
+});
+
+describe('user IDs', () => {
+  it('rejects anything that could escape its path segment', () => {
+    // This guards a delete. `..` in particular survives encodeURIComponent
+    // unchanged, so admitting it would point deleteTokenNode at the database
+    // root. Widen USER_ID_RE only for characters that are neither `/` nor `.`.
+    for (const bad of ['..', '.', '', '/', 'a/b', 'a.b', '%2f', 'a%2fb', '#', 'a b', 'x'.repeat(65)]) {
+      expect(isValidUserId(bad), bad).toBe(false);
+    }
+
+    expect(isValidUserId('jeffreyca16')).toBe(true);
+    expect(isValidUserId('a-b_C9')).toBe(true);
   });
 });

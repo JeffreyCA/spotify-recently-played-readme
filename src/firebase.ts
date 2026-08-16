@@ -46,7 +46,12 @@ export class FirebaseError extends Error {
  * `?`, whitespace, control characters and unexpected Unicode, all of which
  * matter for a path segment and none of which that denylist covers. The
  * residual risk is rejecting a real legacy ID containing something exotic like
- * `~`; nobody has reported one, and widening the class is a one-line change.
+ * `~`; nobody has reported one.
+ *
+ * Widening this class is safe only for characters that are neither `/` nor `.`.
+ * Admitting `.` would make `..` a valid ID, and `encodeURIComponent('..')` is
+ * `..`, so `deleteTokenNode` would resolve to the database root and wipe every
+ * user. Add a case to the rejection test below before touching it.
  */
 const USER_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 
