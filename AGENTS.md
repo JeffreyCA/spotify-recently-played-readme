@@ -11,7 +11,7 @@ npm test
 npm run deploy
 ```
 
-Pushing to `master` runs typecheck + tests in GitHub Actions; Cloudflare Workers Builds deploys.
+Pushing to `main` runs typecheck + tests in GitHub Actions; Cloudflare Workers Builds deploys.
 
 ## Conventions
 
