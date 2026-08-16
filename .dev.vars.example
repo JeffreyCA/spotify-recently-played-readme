@@ -1,0 +1,41 @@
+# Copy to `.dev.vars` for local development (`npm run dev`).
+# `.dev.vars` is gitignored, so every value can live here regardless of type.
+# See README.md for where each one goes in production.
+
+
+# --- Spotify app: https://developer.spotify.com/dashboard ---
+
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+
+# Register this exact origin plus `/callback` as a Redirect URI on the app.
+# Spotify allows http only for 127.0.0.1 - never localhost, never wildcards.
+PUBLIC_BASE_URL=http://127.0.0.1:8787
+
+
+# --- Firebase: service account JSON from your project settings ---
+
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+
+# The service account's `private_key`, base64-encoded:
+#   node -e "console.log(Buffer.from(require('./sa.json').private_key).toString('base64'))"
+FIREBASE_PRIVATE_KEY_B64=
+
+
+# --- Generated, both with `openssl rand -base64 32` ---
+
+# Signs the OAuth `state` parameter.
+STATE_SECRET=
+
+# Encrypts stored refresh tokens; must decode to exactly 32 bytes.
+# Back this up - losing it means every user has to authorize again.
+TOKEN_ENC_KEY=
+
+
+# --- Cache lifetimes, in seconds ---
+
+UPSTREAM_CACHE_SECONDS=60
+NOW_PLAYING_CACHE_SECONDS=20
+ART_CACHE_SECONDS=86400

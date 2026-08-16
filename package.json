@@ -1,44 +1,73 @@
 {
-  "name": "spotify-recently-played-readme",
+  "name": "spotify-recently-played",
   "version": "0.1.0",
+  "description": "Embeddable Spotify recently-played widget for GitHub profile READMEs, served as SVG from a Cloudflare Worker.",
+  "main": "src/index.ts",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='--openssl-legacy-provider' next dev",
-    "build": "NODE_OPTIONS='--openssl-legacy-provider' next build",
-    "start": "NODE_OPTIONS='--openssl-legacy-provider' next start"
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "cf-typegen": "wrangler types"
   },
+  "engines": {
+    "node": ">=22"
+  },
+  "cloudflare": {
+    "bindings": {
+      "SPOTIFY_CLIENT_SECRET": {
+        "description": "Client secret of your Spotify app. The token exchange happens in the Worker, so this never reaches a browser. (The **client ID** is not a secret - set it as a var in `wrangler.jsonc`.)"
+      },
+      "STATE_SECRET": {
+        "description": "Random string used to sign the OAuth `state` parameter. `openssl rand -base64 32`."
+      },
+      "TOKEN_ENC_KEY": {
+        "description": "Base64 of 32 random bytes, used to encrypt stored refresh tokens. `openssl rand -base64 32`. **Back this up** - it cannot be regenerated."
+      },
+      "FIREBASE_PRIVATE_KEY_B64": {
+        "description": "Base64 of the service account's PEM private key."
+      },
+      "FIREBASE_PROJECT_ID": {
+        "description": "Firebase project ID. An identifier, not a credential - kept out of the repo only because the repo is public."
+      },
+      "FIREBASE_CLIENT_EMAIL": {
+        "description": "Service account client email. Useless without the private key; unpublished rather than sensitive."
+      },
+      "FIREBASE_DATABASE_URL": {
+        "description": "Realtime Database URL, e.g. `https://project-default-rtdb.firebaseio.com`. Not a secret - the database is locked by rules, not by the URL being unguessable."
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JeffreyCA/spotify-recently-played-readme.git"
+  },
+  "keywords": [
+    "spotify",
+    "github-profile",
+    "readme",
+    "widget",
+    "svg",
+    "cloudflare-workers"
+  ],
+  "author": "JeffreyCA",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/JeffreyCA/spotify-recently-played-readme/issues"
+  },
+  "homepage": "https://github.com/JeffreyCA/spotify-recently-played-readme#readme",
   "dependencies": {
-    "@ant-design/icons": "^4.5.0",
-    "antd": "^4.14.0",
-    "axios": "^0.21.2",
-    "cookies": "^0.8.0",
-    "firebase-admin": "^9.5.0",
-    "js-cookie": "^2.2.1",
-    "luxon": "^1.26.0",
-    "next": "^9.5.5",
-    "next-images": "^1.7.0",
-    "qs": "^6.9.6",
-    "react": "16.14.0",
-    "react-dom": "16.14.0",
-    "styled-jsx": "^3.3.3",
-    "webpack": "^4.46.0"
+    "hono": "^4.13.2"
   },
   "devDependencies": {
-    "@types/cookies": "^0.7.6",
-    "@types/js-cookie": "^2.2.6",
-    "@types/luxon": "^1.26.2",
-    "@types/node": "^14.14.35",
-    "@types/qs": "^6.9.6",
-    "@types/react": "^16.14.5",
-    "@types/react-dom": "^16.9.11",
-    "@types/styled-jsx": "^2.2.8",
-    "@typescript-eslint/eslint-plugin": "^3.10.1",
-    "@typescript-eslint/parser": "^3.10.1",
-    "eslint": "^7.22.0",
-    "eslint-config-prettier": "^6.15.0",
-    "eslint-plugin-prettier": "^3.3.1",
-    "eslint-plugin-react": "^7.22.0",
-    "prettier": "^2.2.1",
-    "typescript": "^4.2.3"
+    "@cloudflare/vitest-pool-workers": "^0.21.3",
+    "@cloudflare/workers-types": "^5.20260815.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.123.0"
   }
 }

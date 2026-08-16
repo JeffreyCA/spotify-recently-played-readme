@@ -1,0 +1,23 @@
+name: CI
+
+# Deployment is handled by Cloudflare Workers Builds, which watches this repo
+# directly. It does not run the type check or the tests, so that is this
+# workflow's whole job.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test

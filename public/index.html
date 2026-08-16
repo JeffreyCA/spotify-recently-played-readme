@@ -1,1 +1,318 @@
-The app is running!
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spotify Recently Played - README widget</title>
+    <meta
+      name="description"
+      content="Embed your Spotify listening history in a GitHub profile README."
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- An equaliser rather than Spotify's mark. The logo inside the card is
+         attribution; a favicon is this site's own mark, and borrowing a
+         trademark for it would imply endorsement. The bars are the card's own
+         now-playing motif, and they stay legible at 16px where a disc turns
+         to mush. -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23121212'/><g fill='%231db954'><rect x='7' y='15' width='4' height='8' rx='2'/><rect x='14' y='9' width='4' height='14' rx='2'/><rect x='21' y='12' width='4' height='11' rx='2'/></g></svg>" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Spotify <span class="accent">Recently Played</span></h1>
+        <p>An embeddable widget for your GitHub profile README.</p>
+      </div>
+      <nav class="links">
+        <!-- The sister project. The wordmark already reads "last.fm", so the
+             pill says "last.fm version" across the two without repeating it. -->
+        <a
+          class="repo-link"
+          href="https://lastfm-recently-played.jeffreyca.workers.dev/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Last.fm version of this widget"
+        >
+          <svg class="lastfm" viewBox="0 0 708.767 179.332" height="10" aria-hidden="true">
+            <path fill="#d51007" d="M158.4,165.5l-8.4-22.7c0,0-13.6,15.1-33.9,15.1c-18,0-30.8-15.7-30.8-40.7c0-32.1,16.2-43.6,32.1-43.6c23,0,30.3,14.9,36.5,33.9l8.4,26.1c8.4,25.3,24,45.7,69.2,45.7c32.4,0,54.3-9.9,54.3-36c0-21.1-12-32.1-34.5-37.3l-16.7-3.7c-11.5-2.6-14.9-7.3-14.9-15.1c0-8.9,7-14.1,18.5-14.1c12.5,0,19.3,4.7,20.4,15.9l26.1-3.1c-2.1-23.5-18.3-33.1-44.9-33.1c-23.5,0-46.5,8.9-46.5,37.3c0,17.8,8.6,29,30.3,34.2l17.8,4.2c13.3,3.1,17.7,8.6,17.7,16.2c0,9.7-9.4,13.6-27.1,13.6c-26.4,0-37.3-13.8-43.6-32.9l-8.6-26.1c-11-33.9-28.5-46.5-63.2-46.5c-38.4,0-58.7,24.3-58.7,65.5c0,39.7,20.4,61.1,56.9,61.1C144.3,179.3,158.4,165.5,158.4,165.5L158.4,165.5zM46.7,153.2c-2.6,0.8-5.2,1.3-8.6,1.3c-6.3,0-10.7-2.9-10.7-10.4V1.8H0v148.8c0,19.6,13.6,27.7,29.5,27.7c5.2,0,10.2-0.8,16.4-2.3L46.7,153.2L46.7,153.2zM376.9,149.1c-6.8,4.7-12.5,7.1-20.4,7.1c-9.9,0-15.4-5.2-15.4-18V77h36V55.6H341.4V26.6l-27.7,3.4v25.6h-17.5v21.4h17.5v66.8c0,24,13.8,35.5,36.3,35.5c12.3,0,23.2-2.3,31.8-7.3L376.9,149.1L376.9,149.1zM400.7,158.4c0,10.7,8.4,19.3,19.1,19.3c11.2,0,19.6-8.6,19.6-19.3c0-11-8.4-19.3-19.6-19.3C409.1,139.1,400.7,147.5,400.7,158.4L400.7,158.4zM467.7,77v99.2h27.4V77h30.8V55.6h-30.8V44.6c0-16.4,7-21.7,18.5-21.7c8.1,0,13.6,1.8,19.8,5.2l4.4-23C530.6,1.8,522,0,511.6,0c-23,0-43.9,11-43.9,43.6v12h-17.5v21.4H467.7L467.7,77zM635.2,79.4c-3.1-19.6-15.9-26.6-32.6-26.6c-16.7,0-31.1,7.6-37.3,26.1l-3.4-23.2h-22.2v120.6h27.4v-68.1c0-23.2,12-32.1,24.8-32.1c13.3,0,18.8,8.9,18.8,23.2v77h27.1v-68.4c0-23,12.3-31.8,25.1-31.8c13.1,0,18.5,8.9,18.5,23.2v77h27.4V89.5c0-25.8-15.1-36.8-35.2-36.8C656.6,52.7,641.4,60.3,635.2,79.4L635.2,79.4z" />
+          </svg>
+          <span>version</span>
+        </a>
+        <a
+          class="repo-link"
+          href="https://github.com/JeffreyCA/spotify-recently-played-readme"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.36-2.53-.5-2.7-.95-.09-.24-.48-.95-.82-1.14-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.19c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"
+            />
+          </svg>
+          <span>View on GitHub</span>
+        </a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="split">
+        <section aria-label="Options">
+          <fieldset class="group account" id="account">
+            <legend>Your Spotify account</legend>
+
+            <p class="status" id="account-status">
+              <span class="dot" aria-hidden="true"></span>
+              <span id="account-status-text">Not connected</span>
+            </p>
+
+            <p class="hint" id="account-hint">
+              Connect once so we can show your recent tracks.
+            </p>
+
+            <div class="row" id="account-actions">
+              <a class="action primary" id="connect" href="/login">Connect with Spotify</a>
+              <a class="action" id="disconnect" href="/disconnect" hidden>Disconnect</a>
+              <a
+                class="action"
+                href="https://www.spotify.com/account/apps"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Manage app access</a
+              >
+            </div>
+
+            <p class="hint manual-toggle">
+              <button type="button" class="linklike" id="manual-toggle" aria-expanded="false">
+                Enter a username manually
+              </button>
+            </p>
+
+            <div class="field" id="manual-field" hidden>
+              <div class="field-head">
+                <label for="user">Spotify username</label>
+                <span class="error" id="user-error" role="alert"></span>
+              </div>
+              <input
+                id="user"
+                type="text"
+                placeholder="e.g. jeffreyca16"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+              />
+              <p class="hint">The account has to have connected here.</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Card</legend>
+            <div class="group-grid">
+              <div class="field">
+                <label for="theme">Theme</label>
+                <select id="theme">
+                  <option value="dark">Dark</option>
+                  <option value="spotify">Spotify</option>
+                  <option value="legacy">Legacy</option>
+                  <option value="light">Light</option>
+                  <option value="radical">Radical</option>
+                  <option value="dracula">Dracula</option>
+                  <option value="tokyonight">Tokyo Night</option>
+                  <option value="nord">Nord</option>
+                  <option value="catppuccin">Catppuccin</option>
+                  <option value="transparent">Transparent</option>
+                </select>
+              </div>
+
+              <div class="field span-2">
+                <div class="range-head">
+                  <label for="count">Tracks</label>
+                  <output id="count-out">5</output>
+                </div>
+                <input id="count" type="range" min="1" max="10" step="1" value="5" />
+              </div>
+
+              <div class="field">
+                <div class="range-head">
+                  <label for="width">Width</label>
+                  <output id="width-out">400</output>
+                </div>
+                <input id="width" type="range" min="260" max="1000" step="10" value="400" />
+              </div>
+
+              <div class="field">
+                <div class="range-head">
+                  <label for="radius">Corner radius</label>
+                  <output id="radius-out">10</output>
+                </div>
+                <input id="radius" type="range" min="0" max="40" step="1" value="10" />
+              </div>
+
+              <!-- Collapsed by default: six rows that most people never touch,
+                   and leaving them open pushes everything below off the first
+                   screen. The badge is what makes collapsing safe - a
+                   customised color would otherwise be invisible once closed. -->
+              <details class="colors span-2" id="colors-details">
+                <summary>
+                  <svg class="chevron" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true">
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.6"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4.5 2.5 8.5 6l-4 3.5"
+                    />
+                  </svg>
+                  Customize colors
+                  <span class="badge" id="color-count" hidden></span>
+                </summary>
+
+                <p class="hint" style="padding: 0 12px">
+                  Each follows the theme until you set it. Borders, dividers and placeholders are derived
+                  from the text color.
+                </p>
+
+                <div class="color-row" data-color="bg-color">
+                  <label for="bg-color">Background</label>
+                  <span class="swatch-wrap">
+                    <input type="color" id="bg-color-swatch" aria-label="Background color picker" />
+                  </span>
+                  <input id="bg-color" type="text" autocomplete="off" spellcheck="false" />
+                  <button type="button" class="reset" data-reset="bg-color">Reset</button>
+                </div>
+
+                <div class="color-row" data-color="text-color">
+                  <label for="text-color">Track title</label>
+                  <span class="swatch-wrap">
+                    <input type="color" id="text-color-swatch" aria-label="Title color picker" />
+                  </span>
+                  <input id="text-color" type="text" autocomplete="off" spellcheck="false" />
+                  <button type="button" class="reset" data-reset="text-color">Reset</button>
+                </div>
+
+                <div class="color-row" data-color="artist-color">
+                  <label for="artist-color">Artist</label>
+                  <span class="swatch-wrap">
+                    <input type="color" id="artist-color-swatch" aria-label="Artist color picker" />
+                  </span>
+                  <input id="artist-color" type="text" autocomplete="off" spellcheck="false" />
+                  <button type="button" class="reset" data-reset="artist-color">Reset</button>
+                </div>
+
+                <div class="color-row" data-color="meta-color">
+                  <label for="meta-color">Timestamps</label>
+                  <span class="swatch-wrap">
+                    <input type="color" id="meta-color-swatch" aria-label="Timestamp color picker" />
+                  </span>
+                  <input id="meta-color" type="text" autocomplete="off" spellcheck="false" />
+                  <button type="button" class="reset" data-reset="meta-color">Reset</button>
+                </div>
+
+                <div class="color-row" data-color="accent-color">
+                  <label for="accent-color">Accent</label>
+                  <span class="swatch-wrap">
+                    <input type="color" id="accent-color-swatch" aria-label="Accent color picker" />
+                  </span>
+                  <input id="accent-color" type="text" autocomplete="off" spellcheck="false" />
+                  <button type="button" class="reset" data-reset="accent-color">Reset</button>
+                </div>
+
+                <div class="color-row" data-color="logo-color">
+                  <label for="logo-color">Spotify logo</label>
+                  <span class="swatch-wrap">
+                    <input type="color" id="logo-color-swatch" aria-label="Logo color picker" />
+                  </span>
+                  <input id="logo-color" type="text" autocomplete="off" spellcheck="false" />
+                  <button type="button" class="reset" data-reset="logo-color">Reset</button>
+                </div>
+
+                <p id="color-status"></p>
+              </details>
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend>Contents</legend>
+            <div class="group-grid">
+              <div class="field">
+                <label for="profile">Profile</label>
+                <select id="profile">
+                  <option value="header" selected>In the header</option>
+                  <option value="footer-left">Footer, left</option>
+                  <option value="footer-right">Footer, right</option>
+                  <option value="off">Hidden</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="username">Name shown</label>
+                <select id="username">
+                  <option value="display" selected>Display name</option>
+                  <option value="id">Username</option>
+                  <option value="off">None</option>
+                </select>
+              </div>
+
+              <div class="field span-2">
+                <label for="footer">Footer</label>
+                <select id="footer">
+                  <option value="off" selected>Nothing</option>
+                  <option value="wave">Wave</option>
+                </select>
+              </div>
+
+              <div class="toggles span-2">
+                <label class="toggle"><input type="checkbox" id="art" checked /> Cover art</label>
+                <label class="toggle"><input type="checkbox" id="header" checked /> Header</label>
+                <label class="toggle"><input type="checkbox" id="logo" checked /> Spotify logo</label>
+                <label class="toggle"><input type="checkbox" id="avatar" checked /> Profile picture</label>
+                <label class="toggle"><input type="checkbox" id="time" checked /> Timestamps</label>
+                <label class="toggle"><input type="checkbox" id="explicit" checked /> Explicit badge</label>
+                <label class="toggle"
+                  ><input type="checkbox" id="now_playing" checked /> Now playing</label
+                >
+                <label class="toggle"><input type="checkbox" id="progress" checked /> Progress bar</label>
+                <label class="toggle"><input type="checkbox" id="unique" /> Unique tracks only</label>
+                <label class="toggle"><input type="checkbox" id="duration" /> Track length</label>
+                <label class="toggle"><input type="checkbox" id="album" /> Album name</label>
+              </div>
+
+              <p class="scope-note" id="scope-note" hidden>
+                Now playing needs a permission that was added after the original app. If you
+                connected before, <a href="/login">reconnect</a> to enable it.
+              </p>
+            </div>
+          </fieldset>
+        </section>
+
+        <section aria-label="Result">
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" data-tab="markdown" aria-selected="true">Markdown</button>
+            <button class="tab" role="tab" data-tab="linked" aria-selected="false">Markdown + link</button>
+            <button class="tab" role="tab" data-tab="html" aria-selected="false">HTML</button>
+            <button class="tab" role="tab" data-tab="adaptive" aria-selected="false">Auto light/dark</button>
+          </div>
+
+          <pre id="snippet-out">Enter a username</pre>
+          <div class="row" style="margin-bottom: 20px">
+            <button class="action primary" id="copy" disabled>Copy snippet</button>
+            <button class="action" id="copy-url" disabled>Copy URL</button>
+          </div>
+
+          <div class="preview-frame">
+            <img id="preview" alt="Card preview" hidden />
+            <p class="preview-empty" id="preview-empty">
+              Connect your Spotify account to see your card.
+            </p>
+          </div>
+          <!-- Not shown: the URL is already in the snippet above, and a second
+               copy of a 300-character string was just noise. Kept in the DOM
+               because "Copy URL" reads it. -->
+          <p id="url-out" hidden></p>
+        </section>
+      </div>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
