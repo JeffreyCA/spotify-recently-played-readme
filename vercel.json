@@ -1,5 +1,22 @@
 {
-    "github": {
-        "silent": true
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "fluid": true,
+  "git": {
+    "deploymentEnabled": {
+      "main": false
     }
+  },
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 15
+    }
+  },
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://spotify-recently-played.jeffreyca.workers.dev/",
+      "permanent": false
+    }
+  ]
 }
