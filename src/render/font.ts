@@ -2,9 +2,9 @@
  * The system font stack.
  *
  * An SVG rendered inside an <img> cannot load external fonts, so the card
- * relies on whatever the reader already has. Rendering differs slightly per
- * platform; that is the accepted tradeoff for not embedding a base64 font,
- * which would add ~50-100 KB to every single response.
+ * relies on whatever the reader already has. Letterforms therefore differ
+ * slightly per platform. Width-sensitive text is constrained when a non-text
+ * sibling depends on the server-side estimate.
  *
  * `measure.ts` holds advance widths measured from this stack, so the two must
  * stay in step.

@@ -218,6 +218,10 @@ interface TextOptions {
   weight?: number;
   anchor?: 'start' | 'end';
   className?: string;
+  /**
+   * Pins the rendered advance to the width used by adjacent non-text layout.
+   */
+  textLength?: number;
 }
 
 /** Every piece of text in the card goes through here, so escaping is uniform. */
@@ -225,13 +229,14 @@ function text(
   content: string,
   x: number,
   baseline: number,
-  { size, fill, weight, anchor, className }: TextOptions,
+  { size, fill, weight, anchor, className, textLength }: TextOptions,
 ): string {
   return (
     `<text${className ? ` class="${className}"` : ''} x="${round(x)}" y="${round(baseline)}"` +
     `${anchor === 'end' ? ' text-anchor="end"' : ''}` +
     ` font-family="${FONT_STACK}" font-size="${size}"` +
     `${weight ? ` font-weight="${weight}"` : ''}` +
+    `${textLength !== undefined ? ` textLength="${round(textLength)}" lengthAdjust="spacing"` : ''}` +
     ` fill="${fill}">${escapeXml(content)}</text>`
   );
 }
@@ -429,6 +434,7 @@ function renderHeader(ctx: Ctx, baseline: number, avatarImage: string | null): s
       fill: theme.title,
       anchor: 'end',
       className: `${idPrefix}-u`,
+      textLength: showAvatar ? nameWidth : undefined,
     });
   }
   if (identity) {
@@ -638,17 +644,26 @@ function renderFooterProfile(
 
   const nameWidth = showName ? estimateWidth(ctx.profileName, USER_SIZE, 600) : 0;
   const gap = showAvatar && showName ? AVATAR_GAP : 0;
-  const total = (showAvatar ? AVATAR_SIZE : 0) + gap + nameWidth;
-  const startX = align === 'left' ? PAD_X : ctx.rightEdge - total;
+  const avatarX =
+    align === 'left' ? PAD_X : ctx.rightEdge - (showName ? nameWidth + gap : 0) - AVATAR_SIZE;
+  const nameX =
+    align === 'left' ? PAD_X + (showAvatar ? AVATAR_SIZE + gap : 0) : ctx.rightEdge;
 
   let body = '';
-  if (showAvatar) body += avatarTile(avatarImage, startX + AVATAR_SIZE / 2, midY, ctx);
+  if (showAvatar) body += avatarTile(avatarImage, avatarX + AVATAR_SIZE / 2, midY, ctx);
   if (showName) {
     body += text(
       ctx.profileName,
-      startX + (showAvatar ? AVATAR_SIZE + gap : 0),
+      nameX,
       centredBaseline(midY, USER_SIZE),
-      { size: USER_SIZE, weight: 600, fill: theme.title, className: `${idPrefix}-u` },
+      {
+        size: USER_SIZE,
+        weight: 600,
+        fill: theme.title,
+        anchor: align === 'right' ? 'end' : undefined,
+        className: `${idPrefix}-u`,
+        textLength: align === 'right' && showAvatar ? nameWidth : undefined,
+      },
     );
   }
 
