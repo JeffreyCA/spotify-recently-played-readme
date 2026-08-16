@@ -84,6 +84,7 @@ function errorResponse(
   hint: string | undefined,
   params: URLSearchParams,
   maxAgeSeconds = ERROR_MAX_AGE_SECONDS,
+  hintHref?: string,
 ): Response {
   // Error cards honour the presentational params, so a card that fails still
   // matches the shape the reader asked for. Parsed leniently, since the
@@ -91,6 +92,7 @@ function errorResponse(
   const svg = renderErrorCard({
     message,
     hint,
+    hintHref,
     theme: params.get('theme') ?? undefined,
     width: clampInt(params.get('width'), LIMITS.width),
     radius: clampInt(params.get('radius'), LIMITS.radius),
@@ -311,6 +313,21 @@ async function handleCard(c: Context<{ Bindings: Env }>): Promise<Response> {
   }
 }
 
+function reauthorizeCard(request: Request, params: URLSearchParams, env: Env): Response {
+  const base = baseUrl(env);
+  return errorResponse(
+    request,
+    'Spotify authorization needed',
+    `Reconnect at ${base.replace(/^https?:\/\//, '')}`,
+    params,
+    ERROR_MAX_AGE_SECONDS,
+    // `/login` rather than the configurator: the reader already knows what they
+    // want. Skipped when PUBLIC_BASE_URL is unset, since a relative href in a
+    // card embedded on another origin would resolve against that origin.
+    base ? `${base}/login` : undefined,
+  );
+}
+
 function cardError(
   err: unknown,
   request: Request,
@@ -318,12 +335,7 @@ function cardError(
   env: Env,
 ): Response {
   if (err instanceof ReauthorizeError) {
-    return errorResponse(
-      request,
-      'Spotify authorization needed',
-      `Reconnect at ${baseUrl(env).replace(/^https?:\/\//, '')}`,
-      params,
-    );
+    return reauthorizeCard(request, params, env);
   }
 
   if (err instanceof SpotifyApiError) {
@@ -341,12 +353,7 @@ function cardError(
       );
     }
     if (err.isUnauthorized || err.isForbidden) {
-      return errorResponse(
-        request,
-        'Spotify authorization needed',
-        `Reconnect at ${baseUrl(env).replace(/^https?:\/\//, '')}`,
-        params,
-      );
+      return reauthorizeCard(request, params, env);
     }
     return errorResponse(request, err.message, 'Try again in a moment', params);
   }

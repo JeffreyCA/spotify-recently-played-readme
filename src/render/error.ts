@@ -6,6 +6,8 @@ import { resolveTheme } from './themes';
 export interface ErrorCardInput {
   message: string;
   hint?: string;
+  /** Makes `hint` a link. Only resolves where the SVG is interactive - see below. */
+  hintHref?: string;
   theme?: string;
   width?: number;
   radius?: number;
@@ -24,6 +26,7 @@ export interface ErrorCardInput {
 export function renderErrorCard({
   message,
   hint,
+  hintHref,
   theme: themeName,
   width = 400,
   radius = 10,
@@ -46,11 +49,24 @@ export function renderErrorCard({
     `<circle cx="28" cy="${hint ? 36 : 33}" r="1" fill="${theme.accent}"/>`;
 
   const titleY = hint ? 30 : 33;
+  // Underlined and in the accent colour when it links somewhere, so it reads as
+  // something to act on rather than as more explanation.
+  //
+  // The link resolves only where the SVG is interactive - a direct view,
+  // `<object>`, or inline. GitHub embeds the card through an `<img>`, which is
+  // inert, so there the URL is text to copy. It is spelled out in full for
+  // exactly that reason, rather than being hidden behind a word like "here".
+  const hintText = hint
+    ? `<text x="46" y="48" font-family="${FONT_STACK}" font-size="11"` +
+      ` fill="${hintHref ? theme.accent : theme.meta}"` +
+      `${hintHref ? ' text-decoration="underline"' : ''}>${escapeXml(sub)}</text>`
+    : '';
+
   const body =
     `<text x="46" y="${titleY}" font-family="${FONT_STACK}" font-size="13" font-weight="600" fill="${theme.title}">${escapeXml(title)}</text>` +
-    (hint
-      ? `<text x="46" y="48" font-family="${FONT_STACK}" font-size="11" fill="${theme.meta}">${escapeXml(sub)}</text>`
-      : '');
+    (hintHref
+      ? `<a href="${escapeXml(hintHref)}" target="_blank" rel="noopener noreferrer">${hintText}</a>`
+      : hintText);
 
   // Spotify is named even on the failure card: the Developer Terms ask for
   // attribution wherever their content is presented, and a card that failed is
