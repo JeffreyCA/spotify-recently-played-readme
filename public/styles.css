@@ -1,0 +1,632 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --panel: #151b23;
+  --line: #2a323d;
+  --line-soft: #222a34;
+  --ink: #e6edf3;
+  --muted: #9198a1;
+  --faint: #6e7681;
+  --brand: #1db954;
+  --warn: #d29922;
+  --error: #f85149;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/*
+ * `hidden` loses to any `display` rule, and several classes here set one -
+ * `.field` is flex, `.row` is flex - so hiding an element by attribute quietly
+ * did nothing. This makes the attribute mean what it says.
+ */
+[hidden] {
+  display: none !important;
+}
+
+/*
+ * Centred with a ceiling rather than filling the viewport. The form is a fixed
+ * 500px and the preview is capped by the card's own 1000px maximum, so past
+ * ~1160px the extra width goes to a gap nobody asked for.
+ */
+body {
+  margin: 0 auto;
+  max-width: 1160px;
+  padding: 0 24px;
+  background: var(--bg);
+  color: var(--ink);
+  font:
+    15px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 28px 0 20px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+/* The header block below is kept identical to the one in
+   lastfm-recently-played-readme, so switching between the two sites shows no
+   shift in the title, tagline or pills. Change both or neither. */
+h1 {
+  margin: 0 0 4px;
+  font-size: 21px;
+  letter-spacing: -0.01em;
+}
+
+h1 .accent {
+  color: var(--brand);
+}
+
+header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.repo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 14px;
+  white-space: nowrap;
+}
+
+.repo-link:hover {
+  color: var(--ink);
+  border-color: var(--faint);
+}
+
+/* The wordmark is fixed red, so it does not follow the pill's hover color. */
+.repo-link .lastfm {
+  flex: none;
+  width: auto;
+}
+
+main {
+  padding: 24px 0 48px;
+}
+
+/*
+ * The form is a fixed column and the preview takes the rest: the card can be
+ * up to 1000px wide and the form cannot usefully use more. Card height changes
+ * with track count, but the preview is in its own column, so it never reflows
+ * the form.
+ *
+ * `minmax(0, …)` on both tracks, because a grid track's default `auto` minimum
+ * refuses to shrink below its content - a long snippet in the <pre> would push
+ * the column wider than the grid instead of scrolling inside it.
+ */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 500px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+/* Keeps the card in view while the form is scrolled. */
+.split > section:last-child {
+  position: sticky;
+  top: 24px;
+}
+
+@media (max-width: 980px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Stacked, the preview sits after the form, where sticking would pin it over
+     the content below rather than beside it. */
+  .split > section:last-child {
+    position: static;
+  }
+}
+
+/* The centred body carries the gutter, so it narrows with the layout. */
+@media (max-width: 560px) {
+  body {
+    padding: 0 16px;
+  }
+
+  /* One column below the point where two would leave the selects too narrow to
+     read their own option text. */
+  .group-grid,
+  .toggles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+fieldset.group {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+  margin: 0 0 16px;
+  background: var(--panel);
+}
+
+legend {
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.group-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+
+.span-2 {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+input[type='text'],
+select {
+  font: inherit;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+input[type='text']:focus,
+select:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: -1px;
+}
+
+input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--brand);
+}
+
+.range-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.range-head output {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.toggles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.toggle input {
+  accent-color: var(--brand);
+  width: 15px;
+  height: 15px;
+}
+
+.error {
+  color: var(--error);
+  font-size: 12px;
+}
+
+.hint {
+  color: var(--faint);
+  font-size: 12px;
+  margin: 0 0 12px;
+}
+
+/* A disabled control is still readable, just clearly not in play. */
+input:disabled,
+select:disabled,
+.toggle input:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.toggle:has(input:disabled) {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.scope-note {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--warn);
+  background: #d2992218;
+  border: 1px solid #d2992240;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+.scope-note a {
+  color: inherit;
+}
+
+/* Colors ------------------------------------------------------------------ */
+
+details.colors {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0;
+  background: var(--bg);
+}
+
+details.colors > summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* The default triangle sits outside the flex row and cannot be aligned with
+     the label, so it is replaced by the inline chevron. */
+  list-style: none;
+}
+
+details.colors > summary::-webkit-details-marker {
+  display: none;
+}
+
+.chevron {
+  flex: none;
+  transition: transform 150ms ease-in-out;
+}
+
+details.colors[open] > summary .chevron {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+details.colors[open] > summary {
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.badge {
+  background: var(--brand);
+  color: #0d1117;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+}
+
+.color-row {
+  display: grid;
+  grid-template-columns: 1fr 28px 96px auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 10px;
+}
+
+.color-row[data-unset='true'] input[type='text'] {
+  color: var(--faint);
+}
+
+.swatch-wrap {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+
+.swatch-wrap[data-alpha='true']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(45deg, #666 25%, transparent 25%, transparent 75%, #666 75%),
+    linear-gradient(45deg, #666 25%, #999 25%, #999 75%, #666 75%);
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    4px 4px;
+}
+
+/*
+ * A native color input draws its own inset border and padding around the
+ * swatch, which shows through as a pale ring at the corners however far the
+ * element is oversized. The oversize hides the straight edges; these strip the
+ * chrome that produces the ring in the first place.
+ */
+.swatch-wrap input[type='color'] {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.swatch-wrap input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border: 0;
+}
+
+.swatch-wrap input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 0;
+}
+
+.swatch-wrap input[type='color']::-moz-color-swatch {
+  border: 0;
+  border-radius: 0;
+}
+
+.reset {
+  font: inherit;
+  font-size: 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+
+.reset:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--faint);
+}
+
+/*
+ * Disabled while the field still matches the theme. Resetting something that is
+ * already at its default looks like it did nothing, which is what made the
+ * swatch appear not to follow the text field.
+ */
+.reset:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+#color-status {
+  padding: 0 12px 12px;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+#color-status[data-level='warn'] {
+  color: var(--warn);
+}
+
+#color-status[data-level='error'] {
+  color: var(--error);
+}
+
+/* Output ------------------------------------------------------------------ */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  font: inherit;
+  font-size: 13px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.tab[aria-selected='true'] {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+pre {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0 0 10px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button.action,
+a.action {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button.action:hover:not(:disabled),
+a.action:hover {
+  border-color: var(--faint);
+}
+
+button.action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+a.action.primary,
+button.action.primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #08130b;
+}
+
+button.copied {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
+/*
+ * No frame: a bordered panel around the card was a card around a card, and it
+ * made the preview read as a component rather than as the image it will be.
+ * The page background is GitHub-dark already, so this doubles as a realistic
+ * backdrop - including for the transparent theme, which has nothing of its own.
+ *
+ * Left-aligned rather than centred, because that is where it sits in a README.
+ */
+.preview-frame {
+  min-height: 120px;
+}
+
+.preview-frame img {
+  display: block;
+  max-width: 100%;
+}
+
+.preview-empty {
+  color: var(--faint);
+  font-size: 13px;
+  margin: 0;
+}
+
+.connect {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+/* Account ----------------------------------------------------------------- */
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--faint);
+  flex: none;
+}
+
+.account[data-connected='true'] .dot {
+  background: var(--brand);
+}
+
+.linklike {
+  font: inherit;
+  font-size: 12px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.linklike:hover {
+  color: var(--ink);
+}
+
+.manual-toggle {
+  margin: 12px 0 0;
+}
+
+#manual-field {
+  margin-top: 12px;
+}
+
+#manual-field .hint {
+  margin: 8px 0 0;
+}

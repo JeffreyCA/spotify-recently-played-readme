@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "spotify-recently-played",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-14",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  // Serve cacheable responses from the edge without running the Worker, and
+  // collapse concurrent misses. Zoneless, so it works on *.workers.dev.
+  "cache": {
+    "enabled": true
+  },
+  // Without this, every deploy deletes the Firebase vars set in the dashboard.
+  "keep_vars": true,
+  "vars": {
+    // Public values only. Secrets go through `wrangler secret put`; the three
+    // FIREBASE_* identifiers are in the dashboard. See README.md.
+
+    // Public by design: it appears in every authorize URL.
+    "SPOTIFY_CLIENT_ID": "7fca87b90c354988acbffcb363ed7a60",
+
+    // Not derived from the Host header: that is caller-controlled, and Spotify
+    // matches redirect URIs exactly.
+    "PUBLIC_BASE_URL": "https://spotify-recently-played.jeffreyca.workers.dev",
+
+    "UPSTREAM_CACHE_SECONDS": "60",
+    "NOW_PLAYING_CACHE_SECONDS": "20",
+    "ART_CACHE_SECONDS": "86400"
+  }
+}
