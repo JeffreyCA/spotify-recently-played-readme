@@ -110,6 +110,21 @@ main {
   padding: 24px 0 48px;
 }
 
+.policy-notice {
+  margin: 0 0 24px;
+  padding: 10px 12px;
+  color: var(--warn);
+  background: #d2992218;
+  border: 1px solid #d2992240;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.policy-notice a {
+  color: inherit;
+  font-weight: 600;
+}
+
 /*
  * The form is a fixed column and the preview takes the rest: the card can be
  * up to 1000px wide and the form cannot usefully use more. Card height changes
