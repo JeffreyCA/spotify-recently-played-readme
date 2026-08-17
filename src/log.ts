@@ -3,6 +3,11 @@
  * queryable, unlike a message string. Event and field names match the Last.fm
  * Worker.
  *
+ * Every call carries a `message` as well as its fields. The fields are what you
+ * query; the message is what the dashboard shows in its default column, which
+ * is blank for a log that supplies only fields. It is a required parameter so
+ * that cannot be forgotten.
+ *
  * Nothing here repeats the invocation log (method, URL, query, status, colo,
  * country, user agent, wall/CPU time) or the traces (subrequest timings). What
  * neither can show is whether the card *worked*: an error card is a valid SVG
@@ -17,8 +22,10 @@ export type LogValue = string | number | boolean | string[] | null | undefined;
 
 export type LogFields = Record<string, LogValue>;
 
-function emit(level: Level, event: string, fields: LogFields): void {
-  const line: Record<string, Exclude<LogValue, undefined>> = { event };
+function emit(level: Level, event: string, message: string, fields: LogFields): void {
+  // `message` first, and by that name: it is the dashboard's default column,
+  // and a log carrying only fields leaves it blank.
+  const line: Record<string, Exclude<LogValue, undefined>> = { message, event };
   for (const [key, value] of Object.entries(fields)) {
     if (value !== undefined) line[key] = value;
   }
@@ -30,16 +37,16 @@ function emit(level: Level, event: string, fields: LogFields): void {
   else console.info(line);
 }
 
-export function logInfo(event: string, fields: LogFields = {}): void {
-  emit('info', event, fields);
+export function logInfo(event: string, message: string, fields: LogFields = {}): void {
+  emit('info', event, message, fields);
 }
 
-export function logWarn(event: string, fields: LogFields = {}): void {
-  emit('warn', event, fields);
+export function logWarn(event: string, message: string, fields: LogFields = {}): void {
+  emit('warn', event, message, fields);
 }
 
-export function logError(event: string, fields: LogFields = {}): void {
-  emit('error', event, fields);
+export function logError(event: string, message: string, fields: LogFields = {}): void {
+  emit('error', event, message, fields);
 }
 
 /** An unknown catch value as a groupable class name plus free text. */
@@ -143,10 +150,13 @@ export function logCard(trace: CardTrace, result: CardResult): void {
     degraded: trace.degraded.length > 0 ? trace.degraded : undefined,
   };
 
+  const who = `${trace.user ?? '(no user)'} via ${trace.client}`;
+
   if (result.outcome === 'ok') {
     fields.tracks = result.tracks;
     fields.live = result.live;
-    logInfo('card', fields);
+    const live = result.live ? ', now playing' : '';
+    logInfo('card', `card ok: ${who}, ${result.tracks} tracks${live}`, fields);
     return;
   }
 
@@ -170,6 +180,7 @@ export function logCard(trace: CardTrace, result: CardResult): void {
     }
   }
 
-  if (SERVICE_FAULTS.has(result.reason)) logError('card', fields);
-  else logWarn('card', fields);
+  const message = `card ${result.reason}: ${who}`;
+  if (SERVICE_FAULTS.has(result.reason)) logError('card', message, fields);
+  else logWarn('card', message, fields);
 }

@@ -172,7 +172,11 @@ async function googleAccessToken(env: FirebaseEnv, timeoutMs: number): Promise<s
   if (!response.ok) {
     // `error_description` is the difference between "clock skew" and "wrong
     // key", and is the whole reason this is logged rather than just thrown.
-    logError('firebase', { op: 'token', status: response.status, detail: await safeText(response) });
+    logError('firebase', `firebase: Google token exchange failed (HTTP ${response.status})`, {
+      op: 'token',
+      status: response.status,
+      detail: await safeText(response),
+    });
     throw new FirebaseError('Firebase authentication failed');
   }
 
@@ -250,7 +254,7 @@ export async function readTokenNode(
 
   if (response.status === 404) return null;
   if (!response.ok) {
-    logError('firebase', {
+    logError('firebase', `firebase: read failed for ${userId} (HTTP ${response.status})`, {
       op: 'read',
       user: userId,
       status: response.status,
@@ -278,7 +282,7 @@ export async function writeTokenNode(
   );
 
   if (!response.ok) {
-    logError('firebase', {
+    logError('firebase', `firebase: write failed for ${userId} (HTTP ${response.status})`, {
       op: 'write',
       user: userId,
       status: response.status,
@@ -296,7 +300,7 @@ export async function deleteTokenNode(
   const response = await request(env, userId, { method: 'DELETE' }, timeoutMs);
 
   if (!response.ok) {
-    logError('firebase', {
+    logError('firebase', `firebase: delete failed for ${userId} (HTTP ${response.status})`, {
       op: 'delete',
       user: userId,
       status: response.status,

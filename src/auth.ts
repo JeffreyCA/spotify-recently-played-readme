@@ -190,7 +190,10 @@ async function readRefreshToken(
     // A null here means a wrong key, a tampered value, or a blob belonging to
     // someone else. Fall through to plaintext rather than locking the user out.
     if (decrypted) return decrypted;
-    logWarn('auth', { step: 'decrypt_failed', user: userId });
+    logWarn('auth', `auth: stored ciphertext did not decrypt for ${userId}`, {
+      step: 'decrypt_failed',
+      user: userId,
+    });
   }
 
   const plaintext = node.refresh_token;
@@ -203,9 +206,16 @@ async function readRefreshToken(
         await writeTokenNode(env, userId, { refresh_token_enc: enc, schema_v: 1 });
         // Once per account, ever. Counting them is what says whether the
         // plaintext fields can be dropped yet - see AGENTS.md.
-        logInfo('auth', { step: 'encrypted', user: userId });
+        logInfo('auth', `auth: refresh token encrypted for ${userId}`, {
+          step: 'encrypted',
+          user: userId,
+        });
       } catch (err) {
-        logWarn('auth', { step: 'encrypt_failed', user: userId, ...errFields(err) });
+        logWarn('auth', `auth: encryption failed for ${userId}`, {
+          step: 'encrypt_failed',
+          user: userId,
+          ...errFields(err),
+        });
       }
     })();
     if (ctx) ctx.waitUntil(migrate);
@@ -241,14 +251,23 @@ export async function getAccessToken(
   // Only on a memo miss, so this counts the cold path rather than every render.
   // `rotated` is the one worth watching: if the write-back below fails after a
   // rotation, the stored token may already be dead.
-  logInfo('auth', { step: 'refreshed', user: userId, rotated });
+  logInfo('auth', `auth: access token refreshed for ${userId}${rotated ? ' (rotated)' : ''}`, {
+    step: 'refreshed',
+    user: userId,
+    rotated,
+  });
 
   // Spotify sometimes rotates the refresh token. When it does, the old one may
   // stop working, so the new one must be persisted; otherwise the existing one
   // is still current.
   const write = saveTokens(env, userId, tokens.access_token, tokens.refresh_token ?? refreshToken).catch(
     (err: unknown) => {
-      logWarn('auth', { step: 'writeback_failed', user: userId, rotated, ...errFields(err) });
+      logWarn('auth', `auth: token write-back failed for ${userId}`, {
+        step: 'writeback_failed',
+        user: userId,
+        rotated,
+        ...errFields(err),
+      });
     },
   );
   // Deliberately not awaited on the render path: `waitUntil` is a runtime

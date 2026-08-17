@@ -177,7 +177,9 @@ Why the split matters:
 
 ## Logging
 
-`src/log.ts` is the only place `console.*` is called. Workers Logs indexes the **fields of an object**, so every call passes one object and never a formatted string - `console.log('art failed', url)` is greppable text, `logWarn('art', { failed: 2 })` is a column. Event and field names are shared with the Last.fm Worker, so one query covers both.
+`src/log.ts` is the only place `console.*` is called. Workers Logs indexes the **fields of an object**, so every call passes one object and never a formatted string - `console.log('art failed', url)` is greppable text, `logWarn('art', msg, { failed: 2 })` is a column. Event and field names are shared with the Last.fm Worker, so one query covers both.
+
+Every call also passes a **`message`**, and it is a required parameter rather than an optional field. The fields are what you query; `message` is what the dashboard renders in its default column, and that column is blank for a log that carries only fields. Keep it a readable one-liner - `oauth: connected user123` - since the fields already carry the same values in queryable form.
 
 Nothing is logged that the platform already has. The invocation log carries the method, URL, query, status, colo, country, user agent and wall/CPU time; `observability.traces` times every subrequest, which is why there are no hand-rolled timings around Firebase or Spotify. What neither can see is whether the card *worked*, because an error card is a valid SVG at HTTP 200 - from the outside every failure looks like a success. That is what the `card` event is for, and why it fires on success too.
 

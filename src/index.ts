@@ -194,7 +194,11 @@ function optional<T>(
     degraded.push(label);
     // A 401 is the expected legacy case above. Anything else is news.
     if (!(err instanceof SpotifyApiError) || !err.isUnauthorized) {
-      logWarn('card.section', { section: label, user, ...errFields(err) });
+      logWarn('card.section', `card: ${label} unavailable for ${user ?? '(no user)'}`, {
+        section: label,
+        user,
+        ...errFields(err),
+      });
     }
     return null;
   });
@@ -461,7 +465,7 @@ async function startAuth(
   // The whole OAuth flow is logged: it runs once per user rather than once per
   // view, and `start` against `connected` is the only way to see people falling
   // out of it.
-  logInfo('oauth', { step: 'start', intent, client: clientOf(c.req.raw) });
+  logInfo('oauth', `oauth: ${intent} started`, { step: 'start', intent, client: clientOf(c.req.raw) });
 
   return new Response(null, {
     status: 302,
@@ -496,7 +500,10 @@ app.get('/callback', async (c) => {
 
   const denied = params.get('error');
   if (denied) {
-    logInfo('oauth', { step: 'denied', reason: denied });
+    logInfo('oauth', `oauth: Spotify did not authorize (${denied})`, {
+      step: 'denied',
+      reason: denied,
+    });
     const response = errorPage(
       'Spotify did not authorize',
       denied === 'access_denied'
@@ -515,7 +522,7 @@ app.get('/callback', async (c) => {
   if (!code || !state || !cookie || !timingSafeEqual(state.nonce, cookie)) {
     // Usually an expired link or a reopened tab, but this is also what a forged
     // callback looks like, so it is worth being able to see a run of them.
-    logWarn('oauth', {
+    logWarn('oauth', 'oauth: callback state did not verify', {
       step: 'state_invalid',
       has_code: Boolean(code),
       has_state: Boolean(state),
@@ -539,7 +546,10 @@ app.get('/callback', async (c) => {
     if (state.intent === 'disconnect') {
       await deleteTokenNode(c.env, profile.id);
       forgetAccessToken(profile.id);
-      logInfo('oauth', { step: 'disconnected', user: profile.id });
+      logInfo('oauth', `oauth: disconnected ${profile.id}`, {
+        step: 'disconnected',
+        user: profile.id,
+      });
       response = disconnectedPage(profile.id);
     } else {
       if (!tokens.refresh_token) throw new SpotifyAuthError('Spotify did not return a refresh token');
@@ -548,14 +558,18 @@ app.get('/callback', async (c) => {
       // that before the tokens are actually stored.
       await saveTokens(c.env, profile.id, tokens.access_token, tokens.refresh_token);
       forgetAccessToken(profile.id);
-      logInfo('oauth', { step: 'connected', user: profile.id });
+      logInfo('oauth', `oauth: connected ${profile.id}`, { step: 'connected', user: profile.id });
       response = connectedPage(profile.id, baseUrl(c.env));
     }
 
     response.headers.append('Set-Cookie', clear);
     return response;
   } catch (err) {
-    logError('oauth', { step: 'failed', intent: state.intent, ...errFields(err) });
+    logError('oauth', `oauth: ${state.intent} failed`, {
+      step: 'failed',
+      intent: state.intent,
+      ...errFields(err),
+    });
     const response = errorPage(
       'Could not finish connecting',
       err instanceof Error ? err.message : 'Try again in a moment.',
