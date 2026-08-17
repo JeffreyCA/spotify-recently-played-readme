@@ -14,6 +14,16 @@ import { randomNonce, signState, timingSafeEqual, verifyState } from './crypto';
 import type { Env } from './env';
 import { deleteTokenNode, FirebaseError, isConfigured as firebaseConfigured } from './firebase';
 import {
+  clientOf,
+  errFields,
+  logCard,
+  logError,
+  logInfo,
+  logWarn,
+  startCard,
+  type CardReason,
+} from './log';
+import {
   clampInt,
   LIMITS,
   OptionsError,
@@ -166,10 +176,27 @@ async function withAccessToken<T>(
  *
  * Nothing is lost by not rethrowing: a genuinely dead token fails the primary
  * call too, and that is what drives the retry.
+ *
+ * The drop is recorded on the card event rather than logged here: for a legacy
+ * account it happens on every single request, so a line of its own would be the
+ * highest-volume log in the Worker and say nothing new.
+ *
+ * `degraded` is per attempt, not per request: `withAccessToken` re-runs the
+ * whole callback on a 401, and the discarded attempt's failures must not be
+ * reported against a card that ended up rendering them fine.
  */
-function optional<T>(promise: Promise<T>, label: string): Promise<T | null> {
+function optional<T>(
+  promise: Promise<T>,
+  label: string,
+  degraded: string[],
+  user: string | null,
+): Promise<T | null> {
   return promise.catch((err: unknown) => {
-    console.log(`[card] ${label} unavailable`, err instanceof Error ? err.message : String(err));
+    degraded.push(label);
+    // A 401 is the expected legacy case above. Anything else is news.
+    if (!(err instanceof SpotifyApiError) || !err.isUnauthorized) {
+      logWarn('card.section', { section: label, user, ...errFields(err) });
+    }
     return null;
   });
 }
@@ -188,22 +215,37 @@ function dedupe(items: PlayHistoryItem[]): PlayHistoryItem[] {
 
 async function handleCard(c: Context<{ Bindings: Env }>): Promise<Response> {
   const request = c.req.raw;
-  const params = new URL(c.req.url).searchParams;
+  const url = new URL(c.req.url);
+  const params = url.searchParams;
   const ctx = executionCtx(c);
+  const trace = startCard(request, url);
+
+  // Every rendered failure exits through here, so `card` fires exactly once.
+  const fail = (
+    reason: CardReason,
+    message: string,
+    hint: string | undefined,
+    err?: unknown,
+    maxAgeSeconds?: number,
+    hintHref?: string,
+  ): Response => {
+    logCard(trace, { outcome: 'error', reason, err });
+    return errorResponse(request, message, hint, params, maxAgeSeconds, hintHref);
+  };
 
   let options: WidgetOptions;
   try {
     options = parseOptions(params);
   } catch (err) {
     if (err instanceof OptionsError) {
-      return errorResponse(request, err.message, 'Check the ?user= parameter', params);
+      return fail('bad_options', err.message, 'Check the ?user= parameter', err);
     }
     throw err;
   }
 
   const missing = missingConfig(c.env);
   if (missing) {
-    return errorResponse(request, 'Service not configured', `Missing ${missing}`, params);
+    return fail('not_configured', 'Service not configured', `Missing ${missing}`);
   }
 
   const deadline = new Deadline(TOTAL_BUDGET_MS);
@@ -227,6 +269,8 @@ async function handleCard(c: Context<{ Bindings: Env }>): Promise<Response> {
     const fetched = await withAccessToken(c.env, options.user, ctx, async (accessToken) => {
       const spotifyTimeout = deadline.slice(SPOTIFY_BUDGET_MS);
       const shared = { accessToken, cacheKeyUser: options.user, timeoutMs: spotifyTimeout, ctx };
+      // Scoped to this attempt: a 401 re-runs the whole callback.
+      const degraded: string[] = [];
 
       // Run together: the set costs the slowest of the three rather than their
       // sum, which is what keeps a cold render inside Camo's window.
@@ -242,21 +286,26 @@ async function handleCard(c: Context<{ Bindings: Env }>): Promise<Response> {
             // card, which is what keeps pre-Worker accounts working.
             optional(
               getNowPlaying({ ...shared, artPx: ART_DISPLAY_PX, cacheSeconds: nowCache }),
-              'now playing',
+              'now_playing',
+              degraded,
+              trace.user,
             )
           : Promise.resolve<NowPlaying | null>(null),
         wantProfile
           ? optional(
               getProfile({ ...shared, avatarPx: AVATAR_DISPLAY_PX, cacheSeconds: 300 }),
               'profile',
+              degraded,
+              trace.user,
             )
           : Promise.resolve<Profile | null>(null),
       ]);
 
-      return { accessToken, history, live, profile };
+      return { accessToken, history, live, profile, degraded };
     });
 
     const { live, profile } = fetched;
+    trace.degraded = fetched.degraded;
 
     // Trim before fetching art: with `unique` the history call asks for 50, and
     // downloading fifty covers to show five would be the slowest thing here.
@@ -271,12 +320,7 @@ async function handleCard(c: Context<{ Bindings: Env }>): Promise<Response> {
       .slice(0, options.count - (live ? 1 : 0));
 
     if (items.length === 0 && !live) {
-      return errorResponse(
-        request,
-        'Nothing to show',
-        'No recently played tracks on this account',
-        params,
-      );
+      return fail('no_tracks', 'Nothing to show', 'No recently played tracks on this account');
     }
 
     // Art gets whatever the API calls left behind, so a slow upstream degrades
@@ -307,19 +351,30 @@ async function handleCard(c: Context<{ Bindings: Env }>): Promise<Response> {
     // A card with a live row goes stale faster than one that is pure history:
     // the progress bar animates forward from a snapshot, and the snapshot has
     // to be roughly current for that to stay honest.
+    logCard(trace, { outcome: 'ok', tracks: items.length, live: Boolean(live) });
     return svgResponse(svg, `W/"${hash(svg)}"`, request, live ? nowCache : upstreamCache);
   } catch (err) {
-    return cardError(err, request, params, c.env);
+    return cardError(err, c.env, fail);
   }
 }
 
-function reauthorizeCard(request: Request, params: URLSearchParams, env: Env): Response {
+/** Signature of the per-request `fail` closure built in `handleCard`. */
+type Fail = (
+  reason: CardReason,
+  message: string,
+  hint: string | undefined,
+  err?: unknown,
+  maxAgeSeconds?: number,
+  hintHref?: string,
+) => Response;
+
+function reauthorizeCard(env: Env, fail: Fail, err?: unknown): Response {
   const base = baseUrl(env);
-  return errorResponse(
-    request,
+  return fail(
+    'reauthorize',
     'Spotify authorization needed',
     `Reconnect at ${base.replace(/^https?:\/\//, '')}`,
-    params,
+    err,
     ERROR_MAX_AGE_SECONDS,
     // `/login` rather than the configurator: the reader already knows what they
     // want. Skipped when PUBLIC_BASE_URL is unset, since a relative href in a
@@ -328,14 +383,9 @@ function reauthorizeCard(request: Request, params: URLSearchParams, env: Env): R
   );
 }
 
-function cardError(
-  err: unknown,
-  request: Request,
-  params: URLSearchParams,
-  env: Env,
-): Response {
+function cardError(err: unknown, env: Env, fail: Fail): Response {
   if (err instanceof ReauthorizeError) {
-    return reauthorizeCard(request, params, env);
+    return reauthorizeCard(env, fail, err);
   }
 
   if (err instanceof SpotifyApiError) {
@@ -344,27 +394,30 @@ function cardError(
       // edge can hold the answer for free, whereas blocking here spends the
       // Camo budget and risks a broken image on top of the rate limit.
       const wait = Math.min(600, Math.max(ERROR_MAX_AGE_SECONDS, err.retryAfter ?? 60));
-      return errorResponse(
-        request,
+      return fail(
+        'rate_limited',
         'Spotify is rate limiting',
         `Trying again in about ${wait}s`,
-        params,
+        err,
         wait,
       );
     }
     if (err.isUnauthorized || err.isForbidden) {
-      return reauthorizeCard(request, params, env);
+      return reauthorizeCard(env, fail, err);
     }
-    return errorResponse(request, err.message, 'Try again in a moment', params);
+    return fail('upstream', err.message, 'Try again in a moment', err);
   }
 
-  if (err instanceof FirebaseError || err instanceof SpotifyAuthError) {
-    console.error('[card]', err.name, err.message);
-    return errorResponse(request, 'Something went wrong', 'Try again in a moment', params);
+  // Split so an alert can tell "the database is unreachable" from "our Spotify
+  // credentials are wrong" without reading the message.
+  if (err instanceof FirebaseError) {
+    return fail('storage', 'Something went wrong', 'Try again in a moment', err);
+  }
+  if (err instanceof SpotifyAuthError) {
+    return fail('auth', 'Something went wrong', 'Try again in a moment', err);
   }
 
-  console.error('[card] unhandled', err instanceof Error ? err.stack : String(err));
-  return errorResponse(request, 'Something went wrong', 'Try again in a moment', params);
+  return fail('unhandled', 'Something went wrong', 'Try again in a moment', err);
 }
 
 app.get('/svg', handleCard);
@@ -405,6 +458,11 @@ async function startAuth(
   const nonce = randomNonce();
   const state = await signState({ nonce, iat: Date.now(), intent }, c.env.STATE_SECRET!);
 
+  // The whole OAuth flow is logged: it runs once per user rather than once per
+  // view, and `start` against `connected` is the only way to see people falling
+  // out of it.
+  logInfo('oauth', { step: 'start', intent, client: clientOf(c.req.raw) });
+
   return new Response(null, {
     status: 302,
     headers: {
@@ -438,6 +496,7 @@ app.get('/callback', async (c) => {
 
   const denied = params.get('error');
   if (denied) {
+    logInfo('oauth', { step: 'denied', reason: denied });
     const response = errorPage(
       'Spotify did not authorize',
       denied === 'access_denied'
@@ -454,6 +513,14 @@ app.get('/callback', async (c) => {
 
   const state = await verifyState(rawState, c.env.STATE_SECRET!, STATE_MAX_AGE_MS);
   if (!code || !state || !cookie || !timingSafeEqual(state.nonce, cookie)) {
+    // Usually an expired link or a reopened tab, but this is also what a forged
+    // callback looks like, so it is worth being able to see a run of them.
+    logWarn('oauth', {
+      step: 'state_invalid',
+      has_code: Boolean(code),
+      has_state: Boolean(state),
+      has_cookie: Boolean(cookie),
+    });
     const response = errorPage(
       'That link has expired',
       'Start again from the configurator. Authorization links are only valid for a few minutes.',
@@ -472,6 +539,7 @@ app.get('/callback', async (c) => {
     if (state.intent === 'disconnect') {
       await deleteTokenNode(c.env, profile.id);
       forgetAccessToken(profile.id);
+      logInfo('oauth', { step: 'disconnected', user: profile.id });
       response = disconnectedPage(profile.id);
     } else {
       if (!tokens.refresh_token) throw new SpotifyAuthError('Spotify did not return a refresh token');
@@ -480,13 +548,14 @@ app.get('/callback', async (c) => {
       // that before the tokens are actually stored.
       await saveTokens(c.env, profile.id, tokens.access_token, tokens.refresh_token);
       forgetAccessToken(profile.id);
+      logInfo('oauth', { step: 'connected', user: profile.id });
       response = connectedPage(profile.id, baseUrl(c.env));
     }
 
     response.headers.append('Set-Cookie', clear);
     return response;
   } catch (err) {
-    console.error('[callback]', err instanceof Error ? err.message : String(err));
+    logError('oauth', { step: 'failed', intent: state.intent, ...errFields(err) });
     const response = errorPage(
       'Could not finish connecting',
       err instanceof Error ? err.message : 'Try again in a moment.',

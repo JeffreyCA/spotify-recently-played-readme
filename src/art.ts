@@ -1,4 +1,5 @@
 import { cacheGet, cachePut, type WaitUntilCtx } from './cache';
+import { logWarn } from './log';
 import { bytesToBase64 } from './util/base64';
 import { ART_BUDGET_MS, MIN_ART_BUDGET_MS } from './util/deadline';
 
@@ -75,10 +76,17 @@ export function isAllowedArtUrl(raw: string): boolean {
  */
 const ALLOWED_CONTENT_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
+/**
+ * Fetches and inlines one cover, pushing a short tag onto `failures` for every
+ * way that can not happen. All of them end in a placeholder tile and a card
+ * that renders perfectly, so counting them is the only way a rotated CDN
+ * hostname shows up at all.
+ */
 async function fetchOne(
   url: string,
   cacheSeconds: number,
   timeoutMs: number,
+  failures: string[],
   ctx?: WaitUntilCtx,
 ): Promise<string | null> {
   const key = `art:v1:${url}`;
@@ -98,23 +106,34 @@ async function fetchOne(
       // `wrangler dev` does not reproduce.
       redirect: 'manual',
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      failures.push(`http_${res.status}`);
+      return null;
+    }
 
     const contentType = (res.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase();
-    if (!ALLOWED_CONTENT_TYPES.has(contentType)) return null;
+    if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
+      failures.push('not_image');
+      return null;
+    }
 
     const declared = Number.parseInt(res.headers.get('content-length') ?? '', 10);
-    if (Number.isFinite(declared) && declared > MAX_BYTES_PER_IMAGE) return null;
+    if (Number.isFinite(declared) && declared > MAX_BYTES_PER_IMAGE) {
+      failures.push('too_large');
+      return null;
+    }
 
     const buffer = await res.arrayBuffer();
-    if (buffer.byteLength > MAX_BYTES_PER_IMAGE) return null;
+    if (buffer.byteLength > MAX_BYTES_PER_IMAGE) {
+      failures.push('too_large');
+      return null;
+    }
 
     const dataUri = `data:${contentType};base64,${bytesToBase64(new Uint8Array(buffer))}`;
     await cachePut(key, dataUri, cacheSeconds, ctx);
     return dataUri;
   } catch (err) {
-    // Surfaced via `wrangler tail`; art is decorative so the render continues.
-    console.log('[art] fetch failed', err instanceof Error ? err.name : String(err), url);
+    failures.push(err instanceof Error ? err.name : 'unknown');
     await cachePut(key, '', NEGATIVE_CACHE_SECONDS, ctx);
     return null;
   }
@@ -139,15 +158,55 @@ export async function inlineArt({
   timeoutMs = ART_BUDGET_MS,
   ctx,
 }: InlineArtOptions): Promise<(string | null)[]> {
+  const wanted = urls.filter((url): url is string => Boolean(url)).length;
+
   // Not enough of the shared budget left to risk it; render placeholders.
-  if (timeoutMs < MIN_ART_BUDGET_MS) return urls.map(() => null);
+  if (timeoutMs < MIN_ART_BUDGET_MS) {
+    // Means upstream ate the whole budget - the number to tune if it recurs.
+    if (wanted > 0) {
+      logWarn('art', { skipped: 'deadline', total: wanted, budget_ms: Math.round(timeoutMs) });
+    }
+    return urls.map(() => null);
+  }
+
+  const failures: string[] = [];
+  const blockedHosts = new Set<string>();
 
   const results = await Promise.allSettled(
     urls.map((url) => {
-      if (!url || !isAllowedArtUrl(url)) return Promise.resolve(null);
-      return fetchOne(url, cacheSeconds, timeoutMs, ctx);
+      if (!url) return Promise.resolve(null);
+      if (!isAllowedArtUrl(url)) {
+        // Never fetched, so `fetchOne` cannot see it. This is the allowlist
+        // naming a host Spotify no longer serves from, which is otherwise silent.
+        blockedHosts.add(hostOf(url));
+        return Promise.resolve(null);
+      }
+      return fetchOne(url, cacheSeconds, timeoutMs, failures, ctx);
     }),
   );
 
-  return results.map((r) => (r.status === 'fulfilled' ? r.value : null));
+  const images = results.map((r) => (r.status === 'fulfilled' ? r.value : null));
+
+  // Aggregated, not one line per cover: a broken CDN fails every image on every
+  // request, and that is when volume must not multiply by the track count.
+  const missing = images.filter((image, i) => urls[i] && image === null).length;
+  if (missing > 0) {
+    logWarn('art', {
+      total: wanted,
+      failed: missing,
+      errors: [...new Set(failures)],
+      blocked_hosts: blockedHosts.size > 0 ? [...blockedHosts] : undefined,
+    });
+  }
+
+  return images;
+}
+
+/** Hostname only: the actionable part, and it keeps the field groupable. */
+function hostOf(raw: string): string {
+  try {
+    return new URL(raw).hostname;
+  } catch {
+    return 'invalid';
+  }
 }

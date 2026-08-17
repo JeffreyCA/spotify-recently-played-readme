@@ -175,6 +175,25 @@ Why the split matters, given all three could technically be secrets:
 - **The progress bar scales a rect**, because CSS cannot animate an SVG `width` attribute. It animates from the snapshot the Worker saw toward the end of the track and holds there, so a finished track shows a full bar rather than restarting. A paused track gets the snapshot and no animation.
 - `icons.ts` is fixed artwork; `decor.ts` is generated graphics sized to the space it's given. `measure.ts` holds advance widths for the stack in `font.ts`, so those two move together.
 
+## Logging
+
+`src/log.ts` is the only place `console.*` is called. Workers Logs indexes the **fields of an object**, so every call passes one object and never a formatted string - `console.log('art failed', url)` is greppable text, `logWarn('art', { failed: 2 })` is a column. Event and field names are shared with the Last.fm Worker, so one query covers both.
+
+Nothing is logged that the platform already has. The invocation log carries the method, URL, query, status, colo, country, user agent and wall/CPU time; `observability.traces` times every subrequest, which is why there are no hand-rolled timings around Firebase or Spotify. What neither can see is whether the card *worked*, because an error card is a valid SVG at HTTP 200 - from the outside every failure looks like a success. That is what the `card` event is for, and why it fires on success too.
+
+- **`card`** - one line per request, always, with the exception folded in rather than emitted as a second row. `outcome`, `reason`, `client`, `user`, `path`, `ms`, `tracks`, `live`, `degraded`.
+- **`card.section`** - an optional section failed for a reason that is *not* the documented legacy 401. That 401 fires on every request for every pre-Worker account, so it would be the highest-volume log here and say nothing; it is counted in `degraded` on the card event instead.
+- **`art`** - only when a cover is missing, aggregated into one line per request rather than one per cover (unlike the Last.fm Worker, everything here shares a single `inlineArt` call). `blocked_hosts` catches the `isAllowedArtUrl` gotcha, which is otherwise entirely silent.
+- **`auth`** - `refreshed` (memo miss, so it counts the cold path rather than every render), `encrypted`, `decrypt_failed`, `encrypt_failed`, `writeback_failed`. `rotated` on the refresh is the one to watch: a write-back that fails after a rotation can leave the stored token dead. Counting `encrypted` is what tells you whether the plaintext fields can be dropped yet.
+- **`firebase`** - a non-404 REST failure, with `op` and the truncated body. `error_description` is the difference between clock skew and a wrong key.
+- **`oauth`** - the whole flow: `start`, `connected`, `disconnected`, `denied`, `state_invalid`, `failed`. It runs once per user rather than once per view, so it is cheap, and `start` against `connected` is the only way to see people falling out of it. `state_invalid` is also what a forged callback looks like.
+
+`client` collapses the user agent to `vercel` / `camo` / `browser` / `other`, so "how much traffic still comes through the old Vercel deployment" is a group-by rather than four text matches. Vercel is checked first and beats Camo: a README embedding the Vercel URL goes reader → Camo → Vercel → here, and the question is which deployment the markdown points at. `path` answers the same kind of question for the legacy `/api` alias.
+
+`level` is the alerting surface: `error` means the *service* is broken (`not_configured`, `storage`, `auth`, `unhandled`), `warn` means this one request could not be served. `upstream` and `rate_limited` stay at `warn` deliberately - a Spotify outage is real, but no deploy fixes it and it would drown the genuine faults.
+
+Never log a token, a refresh token or the `Authorization` header. Firebase bodies are truncated to 300 chars by `safeText` and are Google error descriptions, not credentials.
+
 ## Testing
 
 Deliberately minimal and it should stay that way. It covers what fails *silently*: well-formed and escaped SVG, untrusted input (track URLs, art hosts, user IDs), the upstream response shapes, the HTTP contract, and the color maths - a wrong mix ratio or a dropped contrast check produces a card that renders perfectly and just looks wrong.

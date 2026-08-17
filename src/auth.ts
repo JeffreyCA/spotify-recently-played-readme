@@ -2,6 +2,7 @@ import { memoOnlyDelete, memoOnlyGet, memoOnlySet, type WaitUntilCtx } from './c
 import { decryptToken, encryptToken } from './crypto';
 import type { Env } from './env';
 import { readTokenNode, writeTokenNode, type TokenNode } from './firebase';
+import { errFields, logInfo, logWarn } from './log';
 import { bytesToBase64 } from './util/base64';
 import { SPOTIFY_BUDGET_MS } from './util/deadline';
 
@@ -190,7 +191,7 @@ async function readRefreshToken(
     // A null here means a wrong key, a tampered value, or a blob belonging to
     // someone else. Fall through to plaintext rather than locking the user out.
     if (decrypted) return decrypted;
-    console.warn('[auth] stored ciphertext did not decrypt', userId);
+    logWarn('auth', { step: 'decrypt_failed', user: userId });
   }
 
   const plaintext = node.refresh_token;
@@ -201,8 +202,11 @@ async function readRefreshToken(
       try {
         const enc = await encryptToken(plaintext, userId, env.TOKEN_ENC_KEY!);
         await writeTokenNode(env, userId, { refresh_token_enc: enc, schema_v: 1 });
+        // Once per account, ever. Counting them is what says whether the
+        // plaintext fields can be dropped yet - see AGENTS.md.
+        logInfo('auth', { step: 'encrypted', user: userId });
       } catch (err) {
-        console.warn('[auth] lazy encryption failed', err instanceof Error ? err.message : err);
+        logWarn('auth', { step: 'encrypt_failed', user: userId, ...errFields(err) });
       }
     })();
     if (ctx) ctx.waitUntil(migrate);
@@ -235,12 +239,18 @@ export async function getAccessToken(
   const tokens = await refreshTokens(env, refreshToken);
   memoOnlySet(accessTokenKey(userId), tokens.access_token, Math.max(60, (tokens.expires_in ?? 3600) - 60));
 
+  const rotated = Boolean(tokens.refresh_token && tokens.refresh_token !== refreshToken);
+  // Only on a memo miss, so this counts the cold path rather than every render.
+  // `rotated` is the one worth watching: if the write-back below fails after a
+  // rotation, the stored token may already be dead.
+  logInfo('auth', { step: 'refreshed', user: userId, rotated });
+
   // Spotify sometimes rotates the refresh token. When it does the old one may
   // stop working, so the new one has to be persisted; when it does not, the
   // existing one is still current.
   const write = saveTokens(env, userId, tokens.access_token, tokens.refresh_token ?? refreshToken).catch(
     (err: unknown) => {
-      console.warn('[auth] token write-back failed', err instanceof Error ? err.message : err);
+      logWarn('auth', { step: 'writeback_failed', user: userId, rotated, ...errFields(err) });
     },
   );
   // Deliberately not awaited on the render path: `waitUntil` is a runtime

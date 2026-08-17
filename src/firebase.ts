@@ -1,4 +1,5 @@
 import { memoOnlyGet, memoOnlySet } from './cache';
+import { logError } from './log';
 import { base64ToBytes, bytesToBase64Url, utf8 } from './util/base64';
 import { FIREBASE_BUDGET_MS, GOOGLE_TOKEN_BUDGET_MS } from './util/deadline';
 
@@ -170,9 +171,9 @@ async function googleAccessToken(env: FirebaseEnv, timeoutMs: number): Promise<s
   }
 
   if (!response.ok) {
-    // The body carries `error_description`, which is the difference between
-    // "clock skew" and "wrong key" and is worth having in a tail.
-    console.error('[firebase] token exchange failed', response.status, await safeText(response));
+    // `error_description` is the difference between "clock skew" and "wrong
+    // key", and is the whole reason this is logged rather than just thrown.
+    logError('firebase', { op: 'token', status: response.status, detail: await safeText(response) });
     throw new FirebaseError('Firebase authentication failed');
   }
 
@@ -250,7 +251,12 @@ export async function readTokenNode(
 
   if (response.status === 404) return null;
   if (!response.ok) {
-    console.error('[firebase] read failed', response.status, await safeText(response));
+    logError('firebase', {
+      op: 'read',
+      user: userId,
+      status: response.status,
+      detail: await safeText(response),
+    });
     throw new FirebaseError('Could not read from Firebase');
   }
 
@@ -273,7 +279,12 @@ export async function writeTokenNode(
   );
 
   if (!response.ok) {
-    console.error('[firebase] write failed', response.status, await safeText(response));
+    logError('firebase', {
+      op: 'write',
+      user: userId,
+      status: response.status,
+      detail: await safeText(response),
+    });
     throw new FirebaseError('Could not write to Firebase');
   }
 }
@@ -286,7 +297,12 @@ export async function deleteTokenNode(
   const response = await request(env, userId, { method: 'DELETE' }, timeoutMs);
 
   if (!response.ok) {
-    console.error('[firebase] delete failed', response.status, await safeText(response));
+    logError('firebase', {
+      op: 'delete',
+      user: userId,
+      status: response.status,
+      detail: await safeText(response),
+    });
     throw new FirebaseError('Could not delete from Firebase');
   }
 }

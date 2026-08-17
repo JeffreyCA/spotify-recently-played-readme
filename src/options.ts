@@ -75,7 +75,13 @@ export function parseHexColor(raw: string | null): string | null {
   return `#${value}`;
 }
 
-export class OptionsError extends Error {}
+export class OptionsError extends Error {
+  constructor(message: string) {
+    super(message);
+    // Logged as the `err` field; without this every error class reads 'Error'.
+    this.name = 'OptionsError';
+  }
+}
 
 function clampInt(raw: string | null, limit: { min: number; max: number; default: number }): number {
   if (raw === null || raw.trim() === '') return limit.default;
