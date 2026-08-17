@@ -8,7 +8,10 @@
     "binding": "ASSETS"
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
   },
   // Serve cacheable responses from the edge without running the Worker, and
   // collapse concurrent misses. Zoneless, so it works on *.workers.dev.
