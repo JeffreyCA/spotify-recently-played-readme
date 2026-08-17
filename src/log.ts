@@ -1,9 +1,7 @@
 /**
- * Structured logging for Workers Logs.
- *
- * Workers Logs indexes the fields of an object passed to `console.*`, so a
- * single object argument is queryable where `console.log('failed', reason)` is
- * only greppable text. Event and field names match the Last.fm Worker.
+ * Structured logging for Workers Logs: an object argument is indexed and
+ * queryable, unlike a message string. Event and field names match the Last.fm
+ * Worker.
  *
  * Nothing here repeats the invocation log (method, URL, query, status, colo,
  * country, user agent, wall/CPU time) or the traces (subrequest timings). What

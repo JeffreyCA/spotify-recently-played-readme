@@ -9,17 +9,16 @@ import { SPOTIFY_BUDGET_MS } from './util/deadline';
 const ACCOUNTS_ROOT = 'https://accounts.spotify.com';
 
 /**
- * Exactly the scopes the shipped features need, and no more.
+ * Exactly the scopes the shipped features need, no more.
  *
- * `user-read-recently-played` is what every existing user already granted to
- * the Vercel app. `user-read-currently-playing` is new, so every one of those
- * users gets a **401 "Permissions missing"** for the now-playing row until they
- * reconnect - which the card handles by dropping that section, never by
- * failing. (401, not the 403 the API schema documents. See spotify.ts.)
+ * `user-read-recently-played` is what every existing user already granted the
+ * Vercel app. `user-read-currently-playing` is new, so those users get a
+ * **401 "Permissions missing"** for the now-playing row until they reconnect -
+ * the card handles this by dropping that section, never by failing. (401, not
+ * the 403 the API schema documents; see spotify.ts.)
  *
- * `user-top-read` is deliberately absent. The feature it would serve is not
- * built, and asking for a scope ahead of the feature is how consent screens
- * become alarming.
+ * `user-top-read` is deliberately absent: its feature is not built, and asking
+ * for a scope ahead of the feature makes consent screens look alarming.
  */
 export const SCOPES = ['user-read-recently-played', 'user-read-currently-playing'];
 
@@ -219,11 +218,10 @@ async function readRefreshToken(
  * An access token for `userId`, minting one when the isolate does not hold a
  * live one.
  *
- * The stored `access_token` is never read. The Vercel app validated it with a
- * `GET /v1/me` before every render, which spends a round trip to avoid a round
- * trip; and the stored copy is only rewritten when we refresh, so after an hour
- * it is stale anyway. Refreshing outright is one call either way and needs no
- * branch.
+ * The stored `access_token` is never read: the Vercel app validated it with a
+ * `GET /v1/me` before every render - a round trip to avoid a round trip - and
+ * the stored copy is only rewritten on refresh, so after an hour it is stale
+ * anyway. Refreshing outright is one call either way, with no branch needed.
  */
 export async function getAccessToken(
   env: Env,
@@ -245,9 +243,9 @@ export async function getAccessToken(
   // rotation, the stored token may already be dead.
   logInfo('auth', { step: 'refreshed', user: userId, rotated });
 
-  // Spotify sometimes rotates the refresh token. When it does the old one may
-  // stop working, so the new one has to be persisted; when it does not, the
-  // existing one is still current.
+  // Spotify sometimes rotates the refresh token. When it does, the old one may
+  // stop working, so the new one must be persisted; otherwise the existing one
+  // is still current.
   const write = saveTokens(env, userId, tokens.access_token, tokens.refresh_token ?? refreshToken).catch(
     (err: unknown) => {
       logWarn('auth', { step: 'writeback_failed', user: userId, rotated, ...errFields(err) });

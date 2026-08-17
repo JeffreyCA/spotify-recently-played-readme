@@ -1,11 +1,8 @@
 /**
- * XML escaping is the single most important correctness concern in this project.
- * Track and artist names routinely contain &, <, >, quotes and control characters.
- * One unescaped ampersand produces a malformed SVG, which GitHub renders as a
- * broken-image icon with no error message at all.
- *
- * Every piece of Spotify-derived text must pass through `escapeXml` before it is
- * interpolated into the SVG. There are no exceptions.
+ * One unescaped `&` in a track or artist name produces a malformed SVG, which
+ * GitHub renders as a broken-image icon with no error message at all. Every
+ * piece of Spotify-derived text goes through `escapeXml` before it reaches the
+ * SVG - no exceptions.
  */
 
 const ESCAPES: Record<string, string> = {
@@ -27,10 +24,10 @@ export function escapeXml(input: string): string {
  * Escapes a string for use inside an SVG `<style>` block.
  *
  * Only for style content, which the XML parser does not escape, so a stray
- * `</style>` would break out of it. Attributes do not need this: every color
- * reaching one is either a theme preset or `parseHexColor` output, and that
- * allowlist - not this function - is the boundary. Sprinkling it on attributes
- * as well suggested a guarantee that was never enforced.
+ * `</style>` would break out. Attributes don't need this: every color reaching
+ * one is either a theme preset or `parseHexColor` output, and that allowlist -
+ * not this function - is the boundary. Applying it to attributes too implied a
+ * guarantee that was never enforced.
  */
 export function escapeCss(input: string): string {
   return input.replace(/[<>"'\\]/g, '');

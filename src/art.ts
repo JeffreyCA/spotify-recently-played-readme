@@ -7,9 +7,9 @@ import { ART_BUDGET_MS, MIN_ART_BUDGET_MS } from './util/deadline';
  * Cover art has to be inlined as a data URI: GitHub renders the widget inside
  * an <img>, and an SVG in that context cannot load any external resource.
  *
- * Unlike Last.fm's, Spotify's image URLs are opaque content hashes with no size
- * segment to rewrite, so the size is chosen by picking the right entry out of
- * the `images` array upstream (see `pickImage` in spotify.ts) rather than here.
+ * Unlike Last.fm's, Spotify's image URLs are opaque content hashes with no
+ * size segment to rewrite, so size is chosen upstream by picking the right
+ * entry from the `images` array (see `pickImage` in spotify.ts).
  */
 
 const MAX_BYTES_PER_IMAGE = 200 * 1024;
@@ -22,16 +22,14 @@ const MAX_BYTES_PER_IMAGE = 200 * 1024;
 const NEGATIVE_CACHE_SECONDS = 60;
 
 /**
- * Hosts whose images this Worker will fetch.
- *
- * This is the open-proxy boundary. Without it, `?img=` on anyone's server is a
- * request this Worker will make on their behalf, from Cloudflare's network,
- * including at private addresses.
+ * Hosts whose images this Worker will fetch - the open-proxy boundary.
+ * Without it, `?img=` on anyone's server is a request this Worker will make
+ * on their behalf, from Cloudflare's network, including at private addresses.
  *
  * `i.scdn.co` is what the Web API returns for album, artist and profile art -
- * it is the only host in the OpenAPI schema's own examples, and the only one
- * the Vercel proxy accepted. `mosaic.scdn.co` serves the generated four-up
- * collages for playlists, and `spotifycdn.com` serves editorial covers.
+ * the only host in the OpenAPI schema's own examples, and the only one the
+ * Vercel proxy accepted. `mosaic.scdn.co` serves the generated four-up
+ * collages for playlists; `spotifycdn.com` serves editorial covers.
  */
 const ALLOWED_ART_HOSTS = new Set(['i.scdn.co', 'mosaic.scdn.co']);
 
@@ -39,17 +37,16 @@ const ALLOWED_ART_HOSTS = new Set(['i.scdn.co', 'mosaic.scdn.co']);
 const ALLOWED_ART_DOMAINS = ['spotifycdn.com'];
 
 /**
- * Host matching is where allowlists usually break, so this is deliberate about
- * how it compares:
+ * Host matching is where allowlists usually break:
  *
  * - `new URL().hostname`, never a substring test on the whole URL, which would
  *   accept `https://evil.test/?x=i.scdn.co`.
  * - `host === d || host.endsWith('.' + d)`, never a bare `endsWith(d)`, which
  *   would accept `evil-spotifycdn.com`.
  * - https only, so a plaintext fetch cannot be substituted.
- * - No userinfo. `https://i.scdn.co@evil.test/x` has hostname `evil.test`, so
+ * - No userinfo: `https://i.scdn.co@evil.test/x` has hostname `evil.test`, so
  *   the check above already rejects it, but a URL carrying credentials at all
- *   is not something we should be following.
+ *   shouldn't be followed.
  */
 export function isAllowedArtUrl(raw: string): boolean {
   let url: URL;
@@ -97,9 +94,9 @@ async function fetchOne(
     const res = await fetch(url, {
       headers: { Accept: 'image/*' },
       signal: AbortSignal.timeout(timeoutMs),
-      // The allowlist above only validates the URL we start with. Following a
-      // redirect would fetch a host that was never checked, so take the 3xx as
-      // a response and let the `res.ok` check below discard it.
+      // The allowlist above only validates the URL we start with; a redirect
+      // would fetch a host that was never checked, so take the 3xx as a
+      // response and let the `res.ok` check below discard it.
       //
       // Must be 'manual', not 'error': Workers implement only 'follow' and
       // 'manual', and 'error' throws a TypeError on the edge - which local
@@ -176,8 +173,8 @@ export async function inlineArt({
     urls.map((url) => {
       if (!url) return Promise.resolve(null);
       if (!isAllowedArtUrl(url)) {
-        // Never fetched, so `fetchOne` cannot see it. This is the allowlist
-        // naming a host Spotify no longer serves from, which is otherwise silent.
+        // Never fetched, so `fetchOne` cannot see it - catches the allowlist
+        // naming a host Spotify no longer serves from, otherwise silent.
         blockedHosts.add(hostOf(url));
         return Promise.resolve(null);
       }
@@ -187,8 +184,8 @@ export async function inlineArt({
 
   const images = results.map((r) => (r.status === 'fulfilled' ? r.value : null));
 
-  // Aggregated, not one line per cover: a broken CDN fails every image on every
-  // request, and that is when volume must not multiply by the track count.
+  // Aggregated, not one line per cover: a broken CDN fails every image on
+  // every request, so volume must not multiply by track count.
   const missing = images.filter((image, i) => urls[i] && image === null).length;
   if (missing > 0) {
     logWarn('art', {

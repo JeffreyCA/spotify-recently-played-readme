@@ -108,8 +108,8 @@ function importHmacKey(secret: string): Promise<CryptoKey> {
  * Compares two strings in time independent of where they first differ.
  *
  * Overkill for a state parameter that also has to match a cookie, but it is
- * three lines and it means the next person to compare a secret here has a
- * correct function to reach for rather than `===`.
+ * three lines, and it gives the next person comparing a secret here a correct
+ * function to reach for instead of `===`.
  */
 export function timingSafeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;

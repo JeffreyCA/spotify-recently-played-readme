@@ -8,11 +8,10 @@ import { FIREBASE_BUDGET_MS, GOOGLE_TOKEN_BUDGET_MS } from './util/deadline';
  *
  * `firebase-admin` is a Node SDK - Node crypto, gRPC, a long-lived connection -
  * and does not run on Workers. This talks to the REST API directly and mints
- * its own Google access token by signing a service-account JWT with WebCrypto.
- *
- * That is about eighty lines, against two abandoned npm packages (the newest
- * published in 2023) that would each be pulled in for one function and sit in
- * the credential path. Worth owning.
+ * its own Google access token by signing a service-account JWT with WebCrypto,
+ * rather than pulling in one of the two abandoned npm packages (newest
+ * published in 2023) that would each sit in the credential path for one
+ * function.
  *
  * It also removes the cold-start problem the old README documented at length:
  * the Admin SDK's first call could take seconds and blow Camo's timeout, which
@@ -62,8 +61,8 @@ export function isValidUserId(value: string): boolean {
 
 /**
  * Validate first, encode second. Encoding alone is not the boundary: it would
- * happily turn `../foo` into something that still resolves upward on some
- * server, and it cannot tell us the value was never plausible to begin with.
+ * turn `../foo` into something that still resolves upward on some server, and
+ * it cannot tell us the value was never plausible to begin with.
  *
  * Case is preserved. Realtime Database keys are case-sensitive, the old app
  * stored whatever `/v1/me` returned, and lookups use the raw `?user=` value -

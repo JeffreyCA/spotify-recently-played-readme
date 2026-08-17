@@ -4,21 +4,21 @@
  *   Layer 1  reader <- edge     Workers Cache, the rendered card   (wrangler.jsonc)
  *   Layer 2  Worker <- upstream this module
  *
- * Layer 1 absorbs repeat views of one card URL. This module is still worth
- * having on top of it, because the two are keyed differently:
+ * Layer 1 absorbs repeat views of one card URL, but the two layers are keyed
+ * differently, so this one earns its keep on top:
  *
  * - One account's data backs many cache keys. `?count=3&theme=dark` and
  *   `?count=5&theme=light` are separate entries at the edge but the same
  *   recently-played response.
- * - Cover art outlives the card. Art is immutable and cached for ~24h, while
- *   the card expires every ~60s; without this layer every regeneration would
- *   re-download every cover, which is the slowest part of a cold render.
+ * - Cover art outlives the card: immutable and cached for ~24h, vs. the
+ *   card's ~60s expiry. Without this layer, every regeneration re-downloads
+ *   every cover - the slowest part of a cold render.
  *
- * Important: the (legacy, zone-level) Cache API is a no-op on *.workers.dev,
- * where there is no zone. We therefore fall back to a per-isolate in-memory
- * map, which still collapses bursts hitting the same isolate and makes local
- * `wrangler dev` behave sensibly. Workers Cache is the zoneless one, but it
- * caches responses, so it cannot serve this purpose.
+ * The (legacy, zone-level) Cache API is a no-op on *.workers.dev, which has no
+ * zone, so we fall back to a per-isolate in-memory map - it still collapses
+ * bursts on the same isolate and makes local `wrangler dev` behave sensibly.
+ * Workers Cache is the zoneless one, but it caches responses, not upstream
+ * calls, so it can't serve this purpose.
  *
  * Access tokens are deliberately NOT stored here - see `memoOnly*` below.
  */
@@ -110,9 +110,9 @@ export async function cachePut(
  * Isolate-local only, never the Cache API.
  *
  * Used for bearer tokens - the user's Spotify access token and our Google
- * access token. Both are credentials, and the Cache API persists to disk at the
- * edge and (in dev) to `.wrangler/state`. An in-memory map dies with the
- * isolate, which is the correct lifetime for a credential and costs only an
+ * access token. Both are credentials, and the Cache API persists to disk at
+ * the edge and (in dev) to `.wrangler/state`, whereas an in-memory map dies
+ * with the isolate - the correct lifetime for a credential, at the cost of an
  * occasional extra refresh.
  */
 export function memoOnlyGet(key: string): string | null {

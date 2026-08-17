@@ -49,13 +49,13 @@ export function renderErrorCard({
     `<circle cx="28" cy="${hint ? 36 : 33}" r="1" fill="${theme.accent}"/>`;
 
   const titleY = hint ? 30 : 33;
-  // Underlined and in the accent colour when it links somewhere, so it reads as
-  // something to act on rather than as more explanation.
+  // Underlined and accent-coloured when it links, so it reads as actionable
+  // rather than more explanation.
   //
-  // The link resolves only where the SVG is interactive - a direct view,
-  // `<object>`, or inline. GitHub embeds the card through an `<img>`, which is
-  // inert, so there the URL is text to copy. It is spelled out in full for
-  // exactly that reason, rather than being hidden behind a word like "here".
+  // The link only resolves where the SVG is interactive - a direct view,
+  // `<object>`, or inline - not through GitHub's inert `<img>` embed, where
+  // it's just text to copy. Spelled out in full for that reason, rather than
+  // hidden behind a word like "here".
   const hintText = hint
     ? `<text x="46" y="48" font-family="${FONT_STACK}" font-size="11"` +
       ` fill="${hintHref ? theme.accent : theme.meta}"` +

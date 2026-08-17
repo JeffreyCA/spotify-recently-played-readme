@@ -4,8 +4,8 @@ import type { FirebaseEnv } from './firebase';
  * Configuration reaching the Worker.
  *
  * Only four of these are credentials. The split is documented in README.md and
- * AGENTS.md and is not cosmetic: a secret cannot be read back once set, so
- * over-classifying an identifier makes a typo in it undebuggable.
+ * AGENTS.md: a secret cannot be read back once set, so over-classifying an
+ * identifier makes a typo in it undebuggable.
  */
 export interface Env extends FirebaseEnv {
   ASSETS: Fetcher;

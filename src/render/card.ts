@@ -93,9 +93,9 @@ const HEADER_TITLE_SIZE = 16;
 const USER_SIZE = 12.5;
 const AVATAR_SIZE = 24;
 /**
- * Sized so the "Spotify" glyphs match the header title's cap height, which is
- * the only reading of "the logo should look the same size as the title" that
- * survives a font-size change. Lands at ~24.3 against a 16px title.
+ * Sized so the "Spotify" glyphs match the header title's cap height - the
+ * only reading of "same size as the title" that survives a font-size change.
+ * Lands at ~24.3 against a 16px title.
  */
 const LOGO_H = logoHeightForCap(CAP_RATIO * HEADER_TITLE_SIZE);
 const LOGO_GAP = 7;
@@ -363,17 +363,17 @@ interface Ctx {
 /**
  * Visual bounds of the header's contents relative to its shared text baseline.
  *
- * Symmetric about the title's cap-to-baseline centre, rather than being the
- * union of everything's ink. Those are not the same thing, and the difference
- * is visible: the avatar hangs ~9px below the baseline while nothing reaches as
- * far above it, so balancing the union dragged the whole band down and left the
- * title riding ~1.1px high whenever a picture was shown - and only then, so it
- * appeared as a jump when the option was toggled.
+ * Symmetric about the title's cap-to-baseline centre, not the union of
+ * everything's ink - those differ visibly: the avatar hangs ~9px below the
+ * baseline while nothing reaches as far above it, so centring the union
+ * dragged the whole band down, leaving the title riding ~1.1px high whenever
+ * a picture was shown - and only then, so it read as a jump when the option
+ * was toggled.
  *
- * Centring on cap-to-baseline is the same rule the rows already use: a
- * descender reads as overhang rather than as part of the line. Everything else
- * is then contained by taking the largest reach in either direction, which
- * keeps at least SECTION_PAD of clearance around the lot.
+ * Cap-to-baseline centring matches the rule the rows already use: a descender
+ * reads as overhang, not part of the line. Everything else is then bounded by
+ * the largest reach in either direction, keeping at least SECTION_PAD of
+ * clearance around the lot.
  */
 function headerExtent(options: WidgetOptions): { top: number; bottom: number } {
   const showsName = options.profile === 'header' && options.username !== 'off';
@@ -412,9 +412,9 @@ function renderHeader(ctx: Ctx, baseline: number, avatarImage: string | null): s
   const showAvatar = inHeader && options.avatar;
 
   // Centred on the title's cap-to-baseline middle - the same line the band is
-  // built around, and the same rule the explicit badge uses against a track
-  // title. The name shares the baseline instead; it is small enough that tying
-  // it to the title that way reads better than pulling the picture down to it.
+  // built around, and the rule the explicit badge also uses against a track
+  // title. The name instead shares the baseline; it's small enough that tying
+  // it to the title reads better than pulling the picture down to it.
   const avatarCentreY = capCentre(baseline, HEADER_TITLE_SIZE);
 
   const nameWidth = showName ? estimateWidth(ctx.profileName, USER_SIZE, 600) : 0;
@@ -450,8 +450,8 @@ function renderHeader(ctx: Ctx, baseline: number, avatarImage: string | null): s
     );
   }
 
-  // Left: logo then title, sharing a baseline so the wordmark and the title
-  // read as one line of type.
+  // Left: logo then title, sharing a baseline so they read as one line of
+  // type.
   let titleX = PAD_X;
   if (options.logo) {
     parts.push(
@@ -488,10 +488,10 @@ interface RowData {
 /**
  * The right-hand meta line: duration then timestamp, joined by a middot.
  *
- * One line rather than a column because the row is only two lines tall and a
- * stacked meta block would fight the artist line for the same vertical space.
- * Composing it as a list also means a narrow card drops whole pieces instead
- * of truncating a timestamp into nonsense.
+ * One line, not a column: the row is only two lines tall, and a stacked meta
+ * block would fight the artist line for the same vertical space. Built as a
+ * list, so a narrow card drops whole pieces instead of truncating a timestamp
+ * into nonsense.
  */
 function metaParts(options: WidgetOptions, row: RowData, now: number): string[] {
   const parts: string[] = [];
@@ -681,16 +681,15 @@ function renderFooterProfile(
 function renderStyle(ctx: Ctx): string {
   const { idPrefix, theme } = ctx;
 
-  // The progress bar animates by scaling a full-width rect, because CSS cannot
-  // animate an SVG `width` attribute. `transform-box: fill-box` makes the
-  // origin local to the rect rather than the whole document.
+  // The progress bar animates by scaling a full-width rect, because CSS
+  // cannot animate an SVG `width` attribute. `transform-box: fill-box` makes
+  // the origin local to the rect rather than the whole document.
   //
-  // This is what makes the bar honest: the server can only ever send a
-  // snapshot, and a bar frozen at the position the Worker happened to see
-  // would be wrong within seconds. Animating from that snapshot toward the end
-  // of the track means the reader's browser keeps it moving in real time. It
-  // runs once and holds, so a finished track shows a full bar rather than
-  // restarting.
+  // The server can only send a snapshot, so a bar frozen at the position the
+  // Worker saw would be wrong within seconds. Animating from that snapshot
+  // toward the end of the track keeps it moving in real time in the reader's
+  // browser. It runs once and holds, so a finished track shows a full bar
+  // rather than restarting.
   const progress =
     ctx.progressFrom === null
       ? ''
@@ -747,9 +746,9 @@ export function renderCard({
 
   // Rendered as given. Choosing *which* tracks appear - deduping the live one
   // out of the history, applying `unique`, honouring `count` - belongs to the
-  // caller, which has already done it before deciding what art to fetch. Doing
-  // it again here meant the same rule written twice in opposite polarity, and
-  // two places to keep in agreement by hand.
+  // caller, which has already done it before deciding what art to fetch.
+  // Doing it again here duplicated the rule in opposite polarity, leaving two
+  // places to keep in sync by hand.
   const rows: RowData[] = [
     ...(live ? [{ track: live.track, playedAt: null, live: true }] : []),
     ...items.map((item) => ({ track: item.track, playedAt: item.playedAt, live: false })),
@@ -764,10 +763,10 @@ export function renderCard({
     options,
     theme,
     // A stable, render-scoped id prefix keeps clipPath and animation ids from
-    // colliding when two of these appear inline on one page. Two cards for the
-    // same user with the same row count still collide, which is a real gap and
-    // an accepted one: inside an `<img>` on GitHub - the only context that
-    // matters here - ids cannot leak between documents at all.
+    // colliding when two of these appear inline on one page. Two cards for
+    // the same user with the same row count still collide - a known, accepted
+    // gap, since inside an `<img>` on GitHub, the only context that matters
+    // here, ids can't leak between documents at all.
     idPrefix: `sp${Math.abs(hashSeed(options.user + rows.length)).toString(36)}`,
     width,
     rightEdge: width - PAD_X,

@@ -64,12 +64,10 @@ export class SpotifyApiError extends Error {
   }
 
   /**
-   * Documented as "bad OAuth request", and in practice rarely what you get.
-   *
-   * A *missing scope* answers **401 "Permissions missing"**, not 403 - verified
-   * against a live token holding only `user-read-recently-played`. That is why
-   * `optional()` in index.ts swallows 401 as well, and why this getter is
-   * barely used.
+   * Documented as "bad OAuth request", but rarely what you get: a *missing
+   * scope* answers **401 "Permissions missing"**, not 403 - verified against a
+   * live token holding only `user-read-recently-played`. `optional()` in
+   * index.ts swallows 401 as well, which is why this getter is barely used.
    */
   get isForbidden(): boolean {
     return this.status === 403;
@@ -155,9 +153,9 @@ async function call(
 
   if (response.ok || response.status === 204) return response;
 
-  // Documented shape is `{ error: { status, message } }`. The message is worth
-  // surfacing on the card: it is the difference between "token expired" and
-  // "this app is in development mode and you are not on the allowlist".
+  // Documented shape is `{ error: { status, message } }`. Surfacing the
+  // message on the card is the difference between "token expired" and "this
+  // app is in development mode and you are not on the allowlist".
   let message = `Spotify error (HTTP ${response.status})`;
   try {
     const body = (await response.json()) as { error?: { message?: string } };
@@ -320,8 +318,8 @@ export interface ProfileOptions {
  * endpoint's scopes, but those gate the `country`, `email`, `product` and
  * `explicit_content` fields - all of which are deprecated and none of which we
  * read. `id`, `display_name`, `images` and `external_urls` come back with any
- * valid token, which is why the Vercel app has been calling it for years with
- * only `user-read-recently-played`.
+ * valid token, which is why the Vercel app has long called it with only
+ * `user-read-recently-played`.
  */
 export async function getProfile({
   accessToken,

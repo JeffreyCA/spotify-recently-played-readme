@@ -39,8 +39,8 @@ export type FooterMode = (typeof FOOTER_MODES)[number];
  * - `off`     no name
  *
  * Two different things: plenty of accounts have a display name that shares
- * nothing with the ID people would search for. `display` costs a `/v1/me` call
- * and `id` does not, so this is not purely cosmetic.
+ * nothing with the ID people would search for. `display` costs a `/v1/me`
+ * call; `id` does not.
  *
  * Parsed leniently from the old boolean, where `username=1` meant `display`.
  */
@@ -172,8 +172,8 @@ export interface WidgetOptions {
 export { clampInt };
 
 export function parseOptions(params: URLSearchParams): WidgetOptions {
-  // Note: `username` says *which* name the profile shows, not whether the
-  // profile exists. It is not an alias for `user`.
+  // `username` says *which* name the profile shows, not whether it exists,
+  // and is not an alias for `user`.
   const user = (params.get('user') ?? '').trim();
 
   if (!user) {

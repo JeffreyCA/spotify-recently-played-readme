@@ -128,9 +128,9 @@ function missingConfig(env: Env): string | null {
   if (!env.SPOTIFY_CLIENT_ID || !env.SPOTIFY_CLIENT_SECRET) return 'SPOTIFY_CLIENT_ID/SECRET';
   if (!firebaseConfigured(env)) return 'FIREBASE_*';
   if (!env.STATE_SECRET) return 'STATE_SECRET';
-  // Without this the Worker runs perfectly and silently stores refresh tokens
-  // in plaintext, which is the one misconfiguration that leaves no trace and
-  // that the plaintext-removal step later assumes cannot have happened.
+  // Without this the Worker runs fine but silently stores refresh tokens in
+  // plaintext - the one misconfiguration that leaves no trace, which the
+  // later plaintext-removal step assumes can never have happened.
   if (!env.TOKEN_ENC_KEY) return 'TOKEN_ENC_KEY';
   return null;
 }
@@ -167,23 +167,22 @@ async function withAccessToken<T>(
  *
  * Swallowing 401 here looks wrong and is not. The OpenAPI schema documents 403
  * for a bad OAuth request, but Spotify actually answers **401 "Permissions
- * missing"** when a scope is absent: verified against a live token holding only
+ * missing"** for a missing scope - verified against a live token holding only
  * `user-read-recently-played`, where `/me/player/currently-playing` returns 401
- * and `/me/player/recently-played` returns 200. Rethrowing it made
- * `withAccessToken` mint a fresh token, receive the same 401, and fail the
- * entire card - for every account that authorized the old Vercel app, which is
- * all of them.
+ * and `/me/player/recently-played` returns 200. Rethrowing made
+ * `withAccessToken` mint a fresh token, hit the same 401, and fail the entire
+ * card for every account that authorized the old Vercel app - all of them.
  *
  * Nothing is lost by not rethrowing: a genuinely dead token fails the primary
- * call too, and that is what drives the retry.
+ * call too, which drives the retry.
  *
- * The drop is recorded on the card event rather than logged here: for a legacy
- * account it happens on every single request, so a line of its own would be the
- * highest-volume log in the Worker and say nothing new.
+ * The drop is recorded on the card event rather than logged here, since for a
+ * legacy account it happens on every request - a line of its own would be the
+ * Worker's highest-volume log and say nothing new.
  *
  * `degraded` is per attempt, not per request: `withAccessToken` re-runs the
- * whole callback on a 401, and the discarded attempt's failures must not be
- * reported against a card that ended up rendering them fine.
+ * whole callback on a 401, so a discarded attempt's failures must not land on
+ * a card that ends up rendering fine.
  */
 function optional<T>(
   promise: Promise<T>,
@@ -307,13 +306,14 @@ async function handleCard(c: Context<{ Bindings: Env }>): Promise<Response> {
     const { live, profile } = fetched;
     trace.degraded = fetched.degraded;
 
-    // Trim before fetching art: with `unique` the history call asks for 50, and
-    // downloading fifty covers to show five would be the slowest thing here.
+    // Trim before fetching art: with `unique` the history call asks for 50,
+    // and downloading fifty covers to show five would be the slowest thing
+    // here.
     //
     // This is also the only place track selection happens - `renderCard` draws
-    // exactly the rows it is handed - so what comes out of here is final: the
-    // live track removed from the history below it, and the card capped at
-    // `count` once the live row has taken its slot.
+    // exactly the rows it's handed - so what comes out of here is final: the
+    // live track removed from history, and the list capped at `count` once
+    // the live row has taken its slot.
     const deduped = options.unique ? dedupe(fetched.history) : fetched.history;
     const items = deduped
       .filter((item) => !live || !item.track.id || item.track.id !== live.track.id)
@@ -348,9 +348,9 @@ async function handleCard(c: Context<{ Bindings: Env }>): Promise<Response> {
       avatarImage: images[items.length + 1] ?? null,
     });
 
-    // A card with a live row goes stale faster than one that is pure history:
-    // the progress bar animates forward from a snapshot, and the snapshot has
-    // to be roughly current for that to stay honest.
+    // A card with a live row goes stale faster than pure history: the progress
+    // bar animates forward from a snapshot, which has to stay roughly current
+    // for that to be honest.
     logCard(trace, { outcome: 'ok', tracks: items.length, live: Boolean(live) });
     return svgResponse(svg, `W/"${hash(svg)}"`, request, live ? nowCache : upstreamCache);
   } catch (err) {
@@ -430,10 +430,10 @@ app.get('/api', handleCard);
 /* -------------------------------------------------------------------------- */
 
 function stateCookie(value: string, maxAgeSeconds: number): string {
-  // Deliberately not `__Host-` prefixed: that would also forbid `Path` being
-  // anything but `/` and require a secure origin, and while 127.0.0.1 counts as
-  // one, the prefix buys nothing here. The HMAC on the state is what binds the
-  // callback to us; this cookie is only the second half of a double submit.
+  // Deliberately not `__Host-` prefixed: that would forbid any `Path` but `/`
+  // and require a secure origin - and while 127.0.0.1 counts as one, the
+  // prefix still buys nothing here. The HMAC on the state binds the callback
+  // to us; this cookie is only the second half of a double submit.
   // SameSite=Lax is what lets it survive the top-level navigation back from
   // accounts.spotify.com.
   return `${STATE_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAgeSeconds}`;
@@ -479,8 +479,8 @@ app.get('/login', (c) => startAuth(c, 'connect'));
 // could wipe anyone's. Bouncing through Spotify proves who is asking, and
 // `show_dialog=false` makes it a redirect rather than a second consent screen.
 //
-// The confirmation page in front of it is not ceremony: the bounce is silent
-// for anyone already signed in to Spotify, so without it a stray click deletes
+// The confirmation page in front of it exists because the bounce is silent
+// for anyone already signed in to Spotify: without it, a stray click deletes
 // the tokens and breaks every embedded card with no chance to stop.
 app.get('/disconnect', (c) => {
   if (c.req.query('confirm') !== '1') return confirmDisconnectPage();

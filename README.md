@@ -225,9 +225,9 @@ Back up `TOKEN_ENC_KEY`. Refresh tokens are encrypted with it, and losing it mea
 
 The Worker asks Spotify for your recent tracks, downloads the album art, and renders everything into a single self-contained SVG. Album art is embedded directly in the image, because an SVG displayed in an `<img>` can't load anything from outside itself.
 
-Spotify has no public endpoint for someone else's listening history, so this needs your authorization rather than just a username. Your Spotify user ID and an encrypted refresh token are stored in a private Firebase database, and that token is exchanged for a short-lived access token on each render.
+Spotify has no public endpoint for someone else's listening history, so this needs your authorization rather than just a username - the stored refresh token (see [Getting started](#getting-started)) is exchanged for a short-lived access token on each render.
 
-**Now playing needs a reconnect for older accounts.** It uses `user-read-currently-playing`, which the original Vercel app never asked for. Cards for accounts that authorized before simply omit that row until they [reconnect](https://spotify-recently-played.jeffreyca.workers.dev/login); everything else keeps working.
+**Now playing needs a reconnect for older accounts.** It uses `user-read-currently-playing`, which the original Vercel app never asked for. Cards for accounts that authorized before omit that row until they [reconnect](https://spotify-recently-played.jeffreyca.workers.dev/login); everything else keeps working.
 
 ## Licence
 
