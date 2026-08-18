@@ -40,23 +40,20 @@ export class FirebaseError extends Error {
  * ID was a key; over REST it is a path segment in `/{user}.json`, so `/`, `..`
  * and anything that terminates the path early are live concerns.
  *
- * Realtime Database keys can never contain `.`, `$`, `#`, `[`, `]` or `/`, so
- * the old app would have thrown on such an ID and nobody outside that set can
- * already be stored. This allowlist is stricter still - it also rejects `%`,
- * `?`, whitespace, control characters and unexpected Unicode, all of which
- * matter for a path segment and none of which that denylist covers. The
- * residual risk is rejecting a real legacy ID containing something exotic like
- * `~`; nobody has reported one.
- *
- * Widening this class is safe only for characters that are neither `/` nor `.`.
- * Admitting `.` would make `..` a valid ID, and `encodeURIComponent('..')` is
- * `..`, so `deleteTokenNode` would resolve to the database root and wipe every
- * user. Add a case to the rejection test below before touching it.
+ * Production contains legacy Spotify IDs with Unicode letters and punctuation
+ * such as `+`, `*`, `?`, `!` and `;`, so this cannot be an ASCII allowlist.
+ * Reject Realtime Database's forbidden key characters plus `%`, `\`,
+ * whitespace, controls and malformed UTF-16, then encode the safe remainder.
+ * In particular, admitting `.` would make `..` valid; encodeURIComponent leaves
+ * that unchanged, so deleteTokenNode could resolve to the database root.
  */
-const USER_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+/** Keep the build-free configurator copy in public/app.js in sync. */
+const USER_ID_MAX_LENGTH = 64;
+const USER_ID_UNSAFE_RE = /[.$#\[\]\/\\%\s\u0000-\u001F\u007F\uD800-\uDFFF]/u;
 
 export function isValidUserId(value: string): boolean {
-  return USER_ID_RE.test(value);
+  const length = [...value].length;
+  return length > 0 && length <= USER_ID_MAX_LENGTH && !USER_ID_UNSAFE_RE.test(value);
 }
 
 /**

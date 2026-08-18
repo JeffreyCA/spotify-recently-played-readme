@@ -7,7 +7,13 @@
  */
 
 /** Mirrors isValidUserId on the server. */
-const USER_RE = /^[A-Za-z0-9_-]{1,64}$/;
+const USER_ID_MAX_LENGTH = 64;
+const USER_ID_UNSAFE_RE = /[.$#\[\]\/\\%\s\u0000-\u001F\u007F\uD800-\uDFFF]/u;
+
+function isValidUserId(value) {
+  const length = [...value].length;
+  return length > 0 && length <= USER_ID_MAX_LENGTH && !USER_ID_UNSAFE_RE.test(value);
+}
 /** Mirrors parseHexColor on the server: hex digits only, no leading hash. */
 const HEX_RE = /^([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
@@ -211,7 +217,7 @@ const STORAGE_KEY = 'spotify-recently-played:user';
 function readStoredUser() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored && USER_RE.test(stored) ? stored : null;
+    return stored && isValidUserId(stored) ? stored : null;
   } catch {
     // Private mode, or storage disabled. The URL still works.
     return null;
@@ -237,7 +243,7 @@ let manualOpen = false;
  * it stops competing with the button that fills it in.
  */
 function syncAccount(user) {
-  const connected = USER_RE.test(user);
+  const connected = isValidUserId(user);
 
   out.account.dataset.connected = String(connected);
   out.accountStatusText.textContent = connected ? `Connected as ${user}` : 'Not connected';
@@ -511,14 +517,14 @@ function render() {
   out.width.textContent = String(state.width);
   out.radius.textContent = String(state.radius);
 
-  const valid = USER_RE.test(state.user);
+  const valid = isValidUserId(state.user);
   const empty = state.user === '';
 
   syncAccount(state.user);
 
   controls.user.setAttribute('aria-invalid', String(!empty && !valid));
   // Only say something when something is wrong.
-  out.userError.textContent = empty || valid ? '' : 'Letters, digits, - and _ only';
+  out.userError.textContent = empty || valid ? '' : 'Invalid Spotify user ID';
 
   syncColors(state);
   updateColorBadge(state);
@@ -648,7 +654,7 @@ out.manualToggle.addEventListener('click', () => {
  * The manual field stays as an escape hatch for building someone else's card.
  */
 const fromQuery = new URLSearchParams(location.search).get('user');
-if (fromQuery && USER_RE.test(fromQuery)) {
+if (fromQuery && isValidUserId(fromQuery)) {
   controls.user.value = fromQuery;
   storeUser(fromQuery);
 } else {

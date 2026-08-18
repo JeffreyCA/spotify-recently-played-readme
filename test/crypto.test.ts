@@ -59,15 +59,43 @@ describe('OAuth state', () => {
 });
 
 describe('user IDs', () => {
-  it('rejects anything that could escape its path segment', () => {
+  it('accepts legacy IDs while rejecting anything unsafe for its path segment', () => {
     // This guards a delete. `..` in particular survives encodeURIComponent
-    // unchanged, so admitting it would point deleteTokenNode at the database
-    // root. Widen USER_ID_RE only for characters that are neither `/` nor `.`.
-    for (const bad of ['..', '.', '', '/', 'a/b', 'a.b', '%2f', 'a%2fb', '#', 'a b', 'x'.repeat(65)]) {
+    // unchanged, so admitting it would point deleteTokenNode at the database root.
+    for (const bad of [
+      '..',
+      '.',
+      '',
+      '/',
+      'a/b',
+      'a.b',
+      '%2f',
+      'a%2fb',
+      '#',
+      '$',
+      '[x]',
+      'a\\b',
+      'a b',
+      'a\tb',
+      '\0',
+      '\u007f',
+      '\ud800',
+      'x'.repeat(65),
+    ]) {
       expect(isValidUserId(bad), bad).toBe(false);
     }
 
-    expect(isValidUserId('jeffreyca16')).toBe(true);
-    expect(isValidUserId('a-b_C9')).toBe(true);
+    for (const valid of [
+      'ordinary_user-9',
+      'legacy+user',
+      'legacy*user',
+      'legacy?user',
+      'legacy!user',
+      'legacy;user',
+      'café_user',
+      'ユーザー',
+    ]) {
+      expect(isValidUserId(valid), valid).toBe(true);
+    }
   });
 });
