@@ -27,7 +27,9 @@ function emit(level: Level, event: string, message: string, fields: LogFields): 
   // and a log carrying only fields leaves it blank.
   const line: Record<string, Exclude<LogValue, undefined>> = { message, event };
   for (const [key, value] of Object.entries(fields)) {
-    if (value !== undefined) line[key] = value;
+    // `message` and `event` are the parameters, not fields: a caller passing
+    // either would otherwise overwrite them and undo the guarantee above.
+    if (value !== undefined && key !== 'message' && key !== 'event') line[key] = value;
   }
 
   // One object, no leading message string: `console.log(msg, obj)` is flattened
@@ -53,6 +55,11 @@ export function logError(event: string, message: string, fields: LogFields = {})
 export function errFields(err: unknown): { err: string; detail: string } {
   if (err instanceof Error) return { err: err.name, detail: err.message };
   return { err: 'unknown', detail: String(err) };
+}
+
+/** `1 track` / `3 tracks`, so a message never reads "1 tracks". */
+export function count(n: number, noun: string): string {
+  return `${n} ${noun}${n === 1 ? '' : 's'}`;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -155,8 +162,10 @@ export function logCard(trace: CardTrace, result: CardResult): void {
   if (result.outcome === 'ok') {
     fields.tracks = result.tracks;
     fields.live = result.live;
+    // "recent tracks", not "tracks": `tracks` counts the history rows only, so
+    // a live-only card is genuinely `0 recent tracks, now playing`.
     const live = result.live ? ', now playing' : '';
-    logInfo('card', `card ok: ${who}, ${result.tracks} tracks${live}`, fields);
+    logInfo('card', `card ok: ${who}, ${count(result.tracks, 'recent track')}${live}`, fields);
     return;
   }
 
@@ -180,7 +189,9 @@ export function logCard(trace: CardTrace, result: CardResult): void {
     }
   }
 
-  const message = `card ${result.reason}: ${who}`;
+  // `failed (reason)` rather than a bare reason: several of them - `upstream`,
+  // `storage`, `auth`, `unhandled` - do not read as a sentence on their own.
+  const message = `card failed (${result.reason}): ${who}`;
   if (SERVICE_FAULTS.has(result.reason)) logError('card', message, fields);
   else logWarn('card', message, fields);
 }
