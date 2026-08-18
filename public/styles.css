@@ -10,6 +10,7 @@
   --brand: #1db954;
   --warn: #d29922;
   --error: #f85149;
+  --info: #58a6ff;
 }
 
 * {
@@ -110,19 +111,50 @@ main {
   padding: 24px 0 48px;
 }
 
-.policy-notice {
-  margin: 0 0 24px;
+/*
+ * Notices are colored by kind rather than given one house style, because two
+ * can be on screen at once: amber is something the reader has to act on, blue
+ * is background information. Giving both the same treatment made the token
+ * expiry warning read as an announcement.
+ *
+ * The base and the blue variant are shared with the Last.fm configurator.
+ */
+.notice {
   padding: 10px 12px;
-  color: var(--warn);
-  background: #d2992218;
-  border: 1px solid #d2992240;
+  border: 1px solid;
   border-radius: 8px;
   font-size: 13px;
 }
 
-.policy-notice a {
+/* Standalone notices sit above the form and carry their own gap down to it. */
+main > .notice {
+  margin: 0 0 24px;
+}
+
+/*
+ * The expiry warning sits in the account card, beside the Connect button that
+ * resolves it. At the top of the page it was the first thing read, ahead of
+ * connecting, and applied to nobody yet. Matches `.manual-toggle` below it.
+ */
+.group > .notice {
+  margin: 12px 0 0;
+}
+
+.notice a {
   color: inherit;
   font-weight: 600;
+}
+
+.notice-warn {
+  color: var(--warn);
+  background: #d2992218;
+  border-color: #d2992240;
+}
+
+.notice-info {
+  color: var(--info);
+  background: #58a6ff18;
+  border-color: #58a6ff40;
 }
 
 /*

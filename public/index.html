@@ -55,15 +55,12 @@
     </header>
 
     <main>
-      <aside class="policy-notice" aria-label="Spotify authorization policy">
-        Spotify refresh tokens expire 6 months after authorization. Reconnect your account every
-        6 months to keep your card working.
-        <a
-          href="https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration"
-          target="_blank"
-          rel="noopener noreferrer"
-          >Learn more</a
-        >
+      <aside class="notice notice-info" aria-label="Hosting change">
+        This is now hosted on
+        <a href="https://www.cloudflare.com/products/workers/" target="_blank" rel="noopener noreferrer"
+          >Cloudflare Workers</a
+        >. The old Vercel endpoint will continue to work, but it's recommended to update your
+        README with the snippet below.
       </aside>
 
       <div class="split">
@@ -91,6 +88,20 @@
                 >Manage app access</a
               >
             </div>
+
+            <!-- A <p>, not an <aside>: inside the card this is directly about
+                 the Connect button above it, and an <aside> would plant a
+                 complementary landmark in the middle of the form. -->
+            <p class="notice notice-warn">
+              Spotify refresh tokens expire 6 months after authorization. Reconnect your account
+              every 6 months to keep your card working.
+              <a
+                href="https://developer.spotify.com/blog/2026-06-18-refresh-token-expiration"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Learn more</a
+              >
+            </p>
 
             <p class="hint manual-toggle">
               <button type="button" class="linklike" id="manual-toggle" aria-expanded="false">

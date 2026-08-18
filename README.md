@@ -11,6 +11,9 @@ Check out [lastfm-recently-played-readme](https://github.com/JeffreyCA/lastfm-re
 
 ---
 
+> [!NOTE]
+> **2026-08-16** - This project is now hosted on [Cloudflare Workers](https://www.cloudflare.com/products/workers/) for cost reasons. The old Vercel endpoint will continue to work, but it is recommended to switch to the new `spotify-recently-played.jeffreyca.workers.dev` address.
+
 ![Spotify recently played](https://spotify-recently-played.jeffreyca.workers.dev/svg?user=jeffreyca16)
 
 ## Getting started
