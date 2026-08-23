@@ -536,13 +536,15 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
 
   if (row.live) {
     const label = 'Listening now';
-    metaWidth = EQ_WIDTH + EQ_TEXT_GAP + estimateWidth(label, META_SIZE);
+    const labelWidth = estimateWidth(label, META_SIZE);
+    metaWidth = EQ_WIDTH + EQ_TEXT_GAP + labelWidth;
     metaSvg =
       equaliser(rightEdge - metaWidth, metaBaseline, theme.accent, idPrefix) +
       text(label, rightEdge, metaBaseline, {
         size: META_SIZE,
         fill: theme.accent,
         anchor: 'end',
+        textLength: labelWidth,
       });
   } else {
     const pieces = metaParts(options, row, now);
@@ -553,6 +555,7 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
         size: META_SIZE,
         fill: theme.meta,
         anchor: 'end',
+        textLength: metaWidth,
       });
       // The visible label is relative; the exact moment goes in the tooltip,
       // where there is room to name a timezone.
@@ -570,11 +573,13 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
     rightEdge - textX - metaReserve - explicitReserve,
     600,
   );
+  const titleWidth = estimateWidth(title, TITLE_SIZE, 600);
 
   const artistLine = options.album && row.track.album
     ? `${row.track.artists.join(', ')}${META_SEPARATOR}${row.track.album}`
     : row.track.artists.join(', ');
   const artist = truncateToWidth(artistLine, ARTIST_SIZE, rightEdge - textX - metaReserve);
+  const artistWidth = estimateWidth(artist, ARTIST_SIZE);
 
   // The title links where the SVG is interactive (direct view, <object>,
   // inline). GitHub embeds it through an <img>, which is inert - the link is
@@ -584,6 +589,7 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
     weight: 600,
     fill: theme.title,
     className: `${idPrefix}-t`,
+    textLength: showExplicit || title !== row.track.name ? titleWidth : undefined,
   });
   const href = safeSpotifyUrl(row.track.url);
 
@@ -591,12 +597,16 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
     // The tooltip carries what the row had to truncate away: the full title,
     // every artist, and the album.
     tooltip(trackTooltip(row.track), href ? link(href, titleSvg, `${idPrefix}-a`) : titleSvg),
-    text(artist, textX, artistBaseline, { size: ARTIST_SIZE, fill: theme.artist }),
+    text(artist, textX, artistBaseline, {
+      size: ARTIST_SIZE,
+      fill: theme.artist,
+      textLength: artist !== artistLine ? artistWidth : undefined,
+    }),
     metaSvg,
   );
 
   if (showExplicit) {
-    const x = textX + estimateWidth(title, TITLE_SIZE, 600) + EXPLICIT_GAP;
+    const x = textX + titleWidth + EXPLICIT_GAP;
     parts.push(
       explicitBadge(
         x,
