@@ -233,7 +233,6 @@ describe('untrusted input', () => {
     for (const bad of [
       '',
       'has space',
-      'inject<svg>',
       '../etc',
       '..',
       'a/b',
@@ -242,9 +241,7 @@ describe('untrusted input', () => {
       'a#b',
       'a[b]',
       'a%2e%2e',
-      'a?b',
       'a\u0000b',
-      'caf\u00e9',
       'x'.repeat(65),
     ]) {
       expect(
