@@ -115,7 +115,9 @@ const EQ_BAR_GAP = 2;
 const EQ_H = 11;
 const EQ_WIDTH = EQ_BARS * (EQ_BAR_W + EQ_BAR_GAP) - EQ_BAR_GAP;
 /** Space between the equaliser and the "Listening now" label. */
-const EQ_TEXT_GAP = 6;
+const EQ_TEXT_GAP = 5;
+/** Midpoint between the measured Windows-like and macOS status-label widths. */
+const NOW_PLAYING_WIDTH_SCALE = 1.04;
 
 /** The now-playing progress bar, drawn below the row it belongs to. */
 const PROGRESS_H = 3;
@@ -545,7 +547,7 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
 
   if (row.live) {
     const label = 'Listening now';
-    const labelWidth = estimateLayoutWidth(label, META_SIZE);
+    const labelWidth = estimateWidth(label, META_SIZE) * NOW_PLAYING_WIDTH_SCALE;
     metaWidth = EQ_WIDTH + EQ_TEXT_GAP + labelWidth;
     metaSvg =
       equaliser(rightEdge - metaWidth, metaBaseline, theme.accent, idPrefix) +
@@ -553,6 +555,7 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
         size: META_SIZE,
         fill: theme.accent,
         anchor: 'end',
+        textLength: labelWidth,
       });
   } else {
     const pieces = metaParts(options, row, now);
