@@ -17,7 +17,6 @@ import {
 import {
   estimateLayoutWidth,
   estimateWidth,
-  truncateToLayoutWidth,
   truncateToWidth,
 } from './measure';
 import { resolveTheme, type Theme } from './themes';
@@ -471,12 +470,16 @@ function renderHeader(ctx: Ctx, baseline: number, avatarImage: string | null): s
   }
 
   const available = rightEdge - titleX - rightUsed - 12;
-  const headerTitle = truncateToLayoutWidth('Recently Played', HEADER_TITLE_SIZE, available, 600);
+  const headerTitle = truncateToWidth('Recently Played', HEADER_TITLE_SIZE, available, 600);
   parts.push(
     text(headerTitle, titleX, baseline, {
       size: HEADER_TITLE_SIZE,
       weight: 600,
       fill: theme.title,
+      textLength:
+        headerTitle !== 'Recently Played'
+          ? estimateWidth(headerTitle, HEADER_TITLE_SIZE, 600)
+          : undefined,
     }),
   );
 
@@ -572,19 +575,14 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
   const explicitReserve = showExplicit ? EXPLICIT_SIZE + EXPLICIT_GAP : 0;
 
   const titleMaxWidth = rightEdge - textX - metaReserve - explicitReserve;
-  const title = showExplicit
-    ? truncateToWidth(row.track.name, TITLE_SIZE, titleMaxWidth, 600)
-    : truncateToLayoutWidth(row.track.name, TITLE_SIZE, titleMaxWidth, 600);
+  const title = truncateToWidth(row.track.name, TITLE_SIZE, titleMaxWidth, 600);
   const titleWidth = estimateWidth(title, TITLE_SIZE, 600);
 
   const artistLine = options.album && row.track.album
     ? `${row.track.artists.join(', ')}${META_SEPARATOR}${row.track.album}`
     : row.track.artists.join(', ');
-  const artist = truncateToLayoutWidth(
-    artistLine,
-    ARTIST_SIZE,
-    rightEdge - textX - metaReserve,
-  );
+  const artist = truncateToWidth(artistLine, ARTIST_SIZE, rightEdge - textX - metaReserve);
+  const artistWidth = estimateWidth(artist, ARTIST_SIZE);
 
   // The title links where the SVG is interactive (direct view, <object>,
   // inline). GitHub embeds it through an <img>, which is inert - the link is
@@ -594,7 +592,7 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
     weight: 600,
     fill: theme.title,
     className: `${idPrefix}-t`,
-    textLength: showExplicit ? titleWidth : undefined,
+    textLength: showExplicit || title !== row.track.name ? titleWidth : undefined,
   });
   const href = safeSpotifyUrl(row.track.url);
 
@@ -605,6 +603,7 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
     text(artist, textX, artistBaseline, {
       size: ARTIST_SIZE,
       fill: theme.artist,
+      textLength: artist !== artistLine ? artistWidth : undefined,
     }),
     metaSvg,
   );

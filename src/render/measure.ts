@@ -138,13 +138,3 @@ export function truncateToWidth(
   }
   return out.trimEnd() + ellipsis;
 }
-
-/** Truncates early enough for wider fonts in the system stack to remain inside the layout box. */
-export function truncateToLayoutWidth(
-  text: string,
-  fontSize: number,
-  maxWidth: number,
-  weight = 400,
-): string {
-  return truncateToWidth(text, fontSize, maxWidth / SYSTEM_FONT_WIDTH_ALLOWANCE, weight);
-}
