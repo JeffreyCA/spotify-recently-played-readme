@@ -81,6 +81,13 @@ function charRatio(ch: string): number {
 const REGULAR_SCALE = 0.9843;
 const SEMIBOLD_SCALE = 1.0157;
 
+/**
+ * San Francisco renders representative title and metadata runs 5-7% wider
+ * than the font used to build the table. Natural text reserves this extra
+ * room instead of being condensed with SVG `textLength`.
+ */
+const SYSTEM_FONT_WIDTH_ALLOWANCE = 1.08;
+
 function weightScale(weight: number): number {
   const t = Math.min(1, Math.max(0, (weight - 400) / 200));
   return REGULAR_SCALE + (SEMIBOLD_SCALE - REGULAR_SCALE) * t;
@@ -95,6 +102,11 @@ export function estimateWidth(text: string, fontSize: number, weight = 400): num
   let total = 0;
   for (const ch of text) total += charRatio(ch) * scale;
   return total;
+}
+
+/** Conservative width for naturally rendered text across the system stack. */
+export function estimateLayoutWidth(text: string, fontSize: number, weight = 400): number {
+  return estimateWidth(text, fontSize, weight) * SYSTEM_FONT_WIDTH_ALLOWANCE;
 }
 
 /**
@@ -125,4 +137,14 @@ export function truncateToWidth(
     out += ch;
   }
   return out.trimEnd() + ellipsis;
+}
+
+/** Truncates early enough for wider fonts in the system stack to remain inside the layout box. */
+export function truncateToLayoutWidth(
+  text: string,
+  fontSize: number,
+  maxWidth: number,
+  weight = 400,
+): string {
+  return truncateToWidth(text, fontSize, maxWidth / SYSTEM_FONT_WIDTH_ALLOWANCE, weight);
 }

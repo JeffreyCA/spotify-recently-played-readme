@@ -14,7 +14,12 @@ import {
   SPOTIFY_GREEN,
   spotifyLogo,
 } from './icons';
-import { estimateWidth, truncateToWidth } from './measure';
+import {
+  estimateLayoutWidth,
+  estimateWidth,
+  truncateToLayoutWidth,
+  truncateToWidth,
+} from './measure';
 import { resolveTheme, type Theme } from './themes';
 
 /* -------------------------------------------------------------------------- */
@@ -466,8 +471,9 @@ function renderHeader(ctx: Ctx, baseline: number, avatarImage: string | null): s
   }
 
   const available = rightEdge - titleX - rightUsed - 12;
+  const headerTitle = truncateToLayoutWidth('Recently Played', HEADER_TITLE_SIZE, available, 600);
   parts.push(
-    text(truncateToWidth('Recently Played', HEADER_TITLE_SIZE, available, 600), titleX, baseline, {
+    text(headerTitle, titleX, baseline, {
       size: HEADER_TITLE_SIZE,
       weight: 600,
       fill: theme.title,
@@ -536,7 +542,7 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
 
   if (row.live) {
     const label = 'Listening now';
-    const labelWidth = estimateWidth(label, META_SIZE);
+    const labelWidth = estimateLayoutWidth(label, META_SIZE);
     metaWidth = EQ_WIDTH + EQ_TEXT_GAP + labelWidth;
     metaSvg =
       equaliser(rightEdge - metaWidth, metaBaseline, theme.accent, idPrefix) +
@@ -544,18 +550,16 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
         size: META_SIZE,
         fill: theme.accent,
         anchor: 'end',
-        textLength: labelWidth,
       });
   } else {
     const pieces = metaParts(options, row, now);
     if (pieces.length > 0) {
       const label = pieces.join(META_SEPARATOR);
-      metaWidth = estimateWidth(label, META_SIZE);
+      metaWidth = estimateLayoutWidth(label, META_SIZE);
       metaSvg = text(label, rightEdge, metaBaseline, {
         size: META_SIZE,
         fill: theme.meta,
         anchor: 'end',
-        textLength: metaWidth,
       });
       // The visible label is relative; the exact moment goes in the tooltip,
       // where there is room to name a timezone.
@@ -567,19 +571,20 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
   const showExplicit = options.explicit && row.track.explicit;
   const explicitReserve = showExplicit ? EXPLICIT_SIZE + EXPLICIT_GAP : 0;
 
-  const title = truncateToWidth(
-    row.track.name,
-    TITLE_SIZE,
-    rightEdge - textX - metaReserve - explicitReserve,
-    600,
-  );
+  const titleMaxWidth = rightEdge - textX - metaReserve - explicitReserve;
+  const title = showExplicit
+    ? truncateToWidth(row.track.name, TITLE_SIZE, titleMaxWidth, 600)
+    : truncateToLayoutWidth(row.track.name, TITLE_SIZE, titleMaxWidth, 600);
   const titleWidth = estimateWidth(title, TITLE_SIZE, 600);
 
   const artistLine = options.album && row.track.album
     ? `${row.track.artists.join(', ')}${META_SEPARATOR}${row.track.album}`
     : row.track.artists.join(', ');
-  const artist = truncateToWidth(artistLine, ARTIST_SIZE, rightEdge - textX - metaReserve);
-  const artistWidth = estimateWidth(artist, ARTIST_SIZE);
+  const artist = truncateToLayoutWidth(
+    artistLine,
+    ARTIST_SIZE,
+    rightEdge - textX - metaReserve,
+  );
 
   // The title links where the SVG is interactive (direct view, <object>,
   // inline). GitHub embeds it through an <img>, which is inert - the link is
@@ -589,7 +594,7 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
     weight: 600,
     fill: theme.title,
     className: `${idPrefix}-t`,
-    textLength: showExplicit || title !== row.track.name ? titleWidth : undefined,
+    textLength: showExplicit ? titleWidth : undefined,
   });
   const href = safeSpotifyUrl(row.track.url);
 
@@ -600,7 +605,6 @@ function renderRow(ctx: Ctx, top: number, row: RowData, artUri: string | null, i
     text(artist, textX, artistBaseline, {
       size: ARTIST_SIZE,
       fill: theme.artist,
-      textLength: artist !== artistLine ? artistWidth : undefined,
     }),
     metaSvg,
   );

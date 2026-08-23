@@ -1,6 +1,6 @@
 import { escapeXml } from './escape';
 import { FONT_STACK } from './font';
-import { truncateToWidth } from './measure';
+import { truncateToLayoutWidth } from './measure';
 import { resolveTheme } from './themes';
 
 export interface ErrorCardInput {
@@ -35,8 +35,8 @@ export function renderErrorCard({
   const height = hint ? 76 : 58;
   const maxTextWidth = width - 32 - 26;
 
-  const title = truncateToWidth(message, 13, maxTextWidth, 600);
-  const sub = hint ? truncateToWidth(hint, 11, maxTextWidth) : '';
+  const title = truncateToLayoutWidth(message, 13, maxTextWidth, 600);
+  const sub = hint ? truncateToLayoutWidth(hint, 11, maxTextWidth) : '';
 
   const background =
     theme.bg === 'none'
