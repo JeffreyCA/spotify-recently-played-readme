@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decryptToken, encryptToken, randomNonce, signState, verifyState } from '../src/crypto';
-import { isValidUserId } from '../src/firebase';
+import { databaseKey, isValidUserId, pathSegment } from '../src/firebase';
 
 /**
  * The two crypto properties worth pinning, and nothing else.
@@ -60,16 +60,17 @@ describe('OAuth state', () => {
 
 describe('user IDs', () => {
   it('accepts legacy IDs while rejecting anything unsafe for its path segment', () => {
-    // This guards a delete. `..` in particular survives encodeURIComponent
-    // unchanged, so admitting it would point deleteTokenNode at the database root.
+    // This guards a delete. Dots are escaped by databaseKey before they reach
+    // the path, but an ID made only of dots is refused anyway.
     for (const bad of [
       '..',
       '.',
+      '...',
       '',
       '/',
       'a/b',
-      'a.b',
       '%2f',
+      'a%2eb',
       'a%2fb',
       '#',
       '$',
@@ -87,6 +88,8 @@ describe('user IDs', () => {
 
     for (const valid of [
       'ordinary_user-9',
+      'first.last',
+      'a..b',
       'legacy+user',
       'legacy*user',
       'legacy?user',
@@ -97,5 +100,28 @@ describe('user IDs', () => {
     ]) {
       expect(isValidUserId(valid), valid).toBe(true);
     }
+  });
+
+  it('maps IDs onto Realtime Database keys without moving existing nodes', () => {
+    // Identity for everything that was valid before dots were admitted, so no
+    // stored node changes address.
+    for (const id of ['jeffreyca16', 'legacy+user', 'legacy?user!', 'café_user', 'ユーザー']) {
+      expect(databaseKey(id), id).toBe(id);
+    }
+
+    expect(databaseKey('first.last')).toBe('first%2Elast');
+    expect(databaseKey('a..b')).toBe('a%2E%2Eb');
+
+    // The whole point: a dot never reaches the path, so `..` cannot resolve
+    // upward. `%` is refused in raw IDs, so no raw ID can forge this form.
+    for (const id of ['a..b', '..a', 'a..', 'first.last']) {
+      const segment = pathSegment(id);
+      expect(segment, id).not.toContain('.');
+      expect(segment, id).not.toContain('/');
+      expect(decodeURIComponent(segment), id).toBe(databaseKey(id));
+    }
+
+    expect(() => pathSegment('..')).toThrow('Invalid Spotify user ID');
+    expect(() => pathSegment('a/b')).toThrow('Invalid Spotify user ID');
   });
 });

@@ -37,23 +37,61 @@ export class FirebaseError extends Error {
  * Spotify user IDs that this service will touch.
  *
  * This is a security boundary, not a formatting rule. With the Admin SDK the
- * ID was a key; over REST it is a path segment in `/{user}.json`, so `/`, `..`
+ * ID was a key; over REST it is a path segment in `/{key}.json`, so `/`, `..`
  * and anything that terminates the path early are live concerns.
  *
  * Production contains legacy Spotify IDs with Unicode letters and punctuation
  * such as `+`, `*`, `?`, `!` and `;`, so this cannot be an ASCII allowlist.
- * Reject Realtime Database's forbidden key characters plus `%`, `\`,
- * whitespace, controls and malformed UTF-16, then encode the safe remainder.
- * In particular, admitting `.` would make `..` valid; encodeURIComponent leaves
- * that unchanged, so deleteTokenNode could resolve to the database root.
+ * Reject `/`, `\`, `%`, `$`, `#`, `[`, `]`, whitespace, controls and malformed
+ * UTF-16, then map the rest onto a Realtime Database key with `databaseKey`
+ * below.
+ *
+ * `.` is admitted because Spotify issues legacy IDs like `first.last`, and an
+ * ID can never be changed, so those accounts would otherwise be locked out
+ * for good. It is safe only because `databaseKey` escapes it before the ID
+ * touches the path - see the note there. An ID made of nothing but dots is
+ * still refused: Spotify has never issued one, and it costs nothing.
  */
 /** Keep the build-free configurator copy in public/app.js in sync. */
 const USER_ID_MAX_LENGTH = 64;
-const USER_ID_UNSAFE_RE = /[.$#\[\]\/\\%\s\u0000-\u001F\u007F\uD800-\uDFFF]/u;
+const USER_ID_UNSAFE_RE = /[$#\[\]\/\\%\s\u0000-\u001F\u007F\uD800-\uDFFF]/u;
+const USER_ID_ONLY_DOTS_RE = /^\.+$/;
 
 export function isValidUserId(value: string): boolean {
   const length = [...value].length;
-  return length > 0 && length <= USER_ID_MAX_LENGTH && !USER_ID_UNSAFE_RE.test(value);
+  return (
+    length > 0 &&
+    length <= USER_ID_MAX_LENGTH &&
+    !USER_ID_UNSAFE_RE.test(value) &&
+    !USER_ID_ONLY_DOTS_RE.test(value)
+  );
+}
+
+/**
+ * The Realtime Database key that holds a user's node.
+ *
+ * Keys cannot contain `.`, `$`, `#`, `[`, `]` or `/`, so those are written as
+ * `%XX`. Two properties matter more than the exact scheme:
+ *
+ * - It is the identity for every ID stored before dots were admitted, so no
+ *   existing node moves. Only the six forbidden characters are touched, and
+ *   `isValidUserId` already refuses five of them - `.` is the only one that
+ *   reaches here today. The others are kept so this stays a complete map of
+ *   the Realtime Database rule rather than an assumption about the validator.
+ * - It is injective. `%` is rejected in raw IDs by `isValidUserId`, so a `%`
+ *   in a key can only have come from here, and two IDs can never share a node.
+ *
+ * This is also what makes admitting `.` safe: the key never contains one, so
+ * `..` reaches the REST path as `%252E%252E` rather than as a segment that
+ * resolves to the database root.
+ */
+const KEY_ESCAPE_RE = /[.$#\[\]\/]/g;
+
+export function databaseKey(userId: string): string {
+  return userId.replace(
+    KEY_ESCAPE_RE,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0')}`,
+  );
 }
 
 /**
@@ -65,11 +103,11 @@ export function isValidUserId(value: string): boolean {
  * stored whatever `/v1/me` returned, and lookups use the raw `?user=` value -
  * so lowercasing here would fail to find existing nodes.
  */
-function pathSegment(userId: string): string {
+export function pathSegment(userId: string): string {
   if (!isValidUserId(userId)) {
     throw new FirebaseError('Invalid Spotify user ID');
   }
-  return encodeURIComponent(userId);
+  return encodeURIComponent(databaseKey(userId));
 }
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
