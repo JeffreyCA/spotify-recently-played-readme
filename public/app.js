@@ -8,11 +8,17 @@
 
 /** Mirrors isValidUserId on the server. */
 const USER_ID_MAX_LENGTH = 64;
-const USER_ID_UNSAFE_RE = /[.$#\[\]\/\\%\s\u0000-\u001F\u007F\uD800-\uDFFF]/u;
+const USER_ID_UNSAFE_RE = /[$#\[\]\/\\%\s\u0000-\u001F\u007F\uD800-\uDFFF]/u;
+const USER_ID_ONLY_DOTS_RE = /^\.+$/;
 
 function isValidUserId(value) {
   const length = [...value].length;
-  return length > 0 && length <= USER_ID_MAX_LENGTH && !USER_ID_UNSAFE_RE.test(value);
+  return (
+    length > 0 &&
+    length <= USER_ID_MAX_LENGTH &&
+    !USER_ID_UNSAFE_RE.test(value) &&
+    !USER_ID_ONLY_DOTS_RE.test(value)
+  );
 }
 /** Mirrors parseHexColor on the server: hex digits only, no leading hash. */
 const HEX_RE = /^([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;

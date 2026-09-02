@@ -236,7 +236,6 @@ describe('untrusted input', () => {
       '../etc',
       '..',
       'a/b',
-      'a.b',
       'a$b',
       'a#b',
       'a[b]',
@@ -253,6 +252,8 @@ describe('untrusted input', () => {
     // Case is preserved: Realtime Database keys are case-sensitive, so two
     // casings are genuinely two different accounts.
     expect(parseOptions(new URLSearchParams('user=JeffreyCA16')).user).toBe('JeffreyCA16');
+    // Legacy email-style IDs carry a dot; the database key escapes it later.
+    expect(parseOptions(new URLSearchParams('user=first.last')).user).toBe('first.last');
     expect(parseOptions(new URLSearchParams('user=jeffreyca16&count=999')).count).toBe(10);
   });
 
