@@ -61,7 +61,7 @@
   },
   "homepage": "https://github.com/JeffreyCA/spotify-recently-played-readme#readme",
   "dependencies": {
-    "hono": "^4.13.2"
+    "hono": "^4.13.5"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.21.3",
